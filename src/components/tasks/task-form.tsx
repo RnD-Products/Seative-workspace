@@ -13,13 +13,14 @@ import { taskSchema, type TaskInput } from '@/lib/validation';
 import { PRIORITIES, PRIORITY_LABEL, TASK_STATUSES, TASK_STATUS_LABEL } from '@/lib/domain';
 import type { Profile } from '@/lib/types';
 import { createTask, updateTask } from '@/app/actions/tasks';
-import type { ProjectRef } from './types';
+import { canManageRef, type Me, type ProjectRef } from './types';
 
-export function TaskForm({ taskId, defaults, projects, people, onDone }: {
+export function TaskForm({ taskId, defaults, projects, people, me, onDone }: {
   taskId?: string;
   defaults?: Partial<TaskInput>;
-  projects: ProjectRef[]; // projects the user can manage
+  projects: ProjectRef[]; // projects the user can add tasks to
   people: Profile[];
+  me: Me;
   onDone?: (id: string) => void;
 }) {
   const router = useRouter();
@@ -36,6 +37,8 @@ export function TaskForm({ taskId, defaults, projects, people, onDone }: {
   const projectId = form.watch('project_id');
   const project = projects.find((p) => p.id === projectId);
   const assignable = people.filter((p) => project && (project.memberIds.includes(p.id) || project.manager_id === p.id));
+  // Members (not managing this project) can only create tasks for themselves.
+  const selfOnly = !canManageRef(project, me);
 
   return (
     <form
@@ -43,6 +46,7 @@ export function TaskForm({ taskId, defaults, projects, people, onDone }: {
       className="space-y-4"
       onSubmit={form.handleSubmit((values) => start(async () => {
         setError(null);
+        if (selfOnly) values = { ...values, assignee_id: me.id };
         const res = taskId ? await updateTask(taskId, values) : await createTask(values);
         if (!res.ok) {
           setError(res.error);
@@ -62,16 +66,22 @@ export function TaskForm({ taskId, defaults, projects, people, onDone }: {
       </FormField>
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField id="project_id" label="Project" error={errors.project_id?.message}>
-          <NativeSelect {...form.register('project_id', { onChange: () => form.setValue('assignee_id', '') })}>
+          <NativeSelect disabled={Boolean(taskId) && selfOnly} {...form.register('project_id', { onChange: () => form.setValue('assignee_id', '') })}>
             {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </NativeSelect>
         </FormField>
-        <FormField id="assignee_id" label="Assignee" hint={assignable.length ? undefined : 'Add members to the project to assign tasks.'} error={errors.assignee_id?.message}>
-          <NativeSelect {...form.register('assignee_id')}>
-            <option value="">Unassigned</option>
-            {assignable.map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
-          </NativeSelect>
-        </FormField>
+        {selfOnly ? (
+          <FormField id="assignee_display" label="Assignee" hint="Tasks you add are assigned to you. Your project manager can reassign them.">
+            <Input id="assignee_display" value="You" readOnly disabled />
+          </FormField>
+        ) : (
+          <FormField id="assignee_id" label="Assignee" hint={assignable.length ? undefined : 'Add members to the project to assign tasks.'} error={errors.assignee_id?.message}>
+            <NativeSelect {...form.register('assignee_id')}>
+              <option value="">Unassigned</option>
+              {assignable.map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
+            </NativeSelect>
+          </FormField>
+        )}
         <FormField id="status" label="Status"><NativeSelect {...form.register('status')}>{TASK_STATUSES.map((s) => <option key={s} value={s}>{TASK_STATUS_LABEL[s]}</option>)}</NativeSelect></FormField>
         <FormField id="priority" label="Priority"><NativeSelect {...form.register('priority')}>{PRIORITIES.map((p) => <option key={p} value={p}>{PRIORITY_LABEL[p]}</option>)}</NativeSelect></FormField>
         <FormField id="start_date" label="Start date" error={errors.start_date?.message}><Input type="date" {...form.register('start_date')} /></FormField>
@@ -84,17 +94,18 @@ export function TaskForm({ taskId, defaults, projects, people, onDone }: {
   );
 }
 
-export function NewTaskDialog({ projects, people, defaults, label = 'New task', variant = 'default' }: {
-  projects: ProjectRef[]; people: Profile[]; defaults?: Partial<TaskInput>; label?: string; variant?: 'default' | 'outline';
+export function NewTaskDialog({ projects, people, me, defaults, label = 'New task', variant = 'default' }: {
+  projects: ProjectRef[]; people: Profile[]; me: Me; defaults?: Partial<TaskInput>; label?: string; variant?: 'default' | 'outline';
 }) {
+  const managesAny = projects.some((p) => canManageRef(p, me));
   const [open, setOpen] = useState(false);
   if (!projects.length) return null;
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild><Button variant={variant}><Plus /> {label}</Button></DialogTrigger>
       <DialogContent className="max-w-xl">
-        <DialogHeader><DialogTitle>New task</DialogTitle><DialogDescription>Assignees must be members of the project.</DialogDescription></DialogHeader>
-        <TaskForm projects={projects} people={people} defaults={defaults} onDone={() => setOpen(false)} />
+        <DialogHeader><DialogTitle>New task</DialogTitle><DialogDescription>{managesAny ? 'Assignees must be members of the project.' : 'Add a task for yourself. Your project manager will see it in the project.'}</DialogDescription></DialogHeader>
+        <TaskForm projects={projects} people={people} me={me} defaults={defaults} onDone={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   );

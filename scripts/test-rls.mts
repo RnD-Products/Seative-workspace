@@ -131,7 +131,16 @@ async function main() {
   const T = task.id;
   check('PM creates and assigns a task; creator recorded', task.created_by === U.pm1);
   await expectDenied('cannot assign a task to a non-member', () => as('pm1', `insert into public.tasks (project_id, title, assignee_id) values ('${P}', 'X', '${U.emp2}') returning id`));
-  await expectDenied('employee cannot create tasks', () => as('emp1', `insert into public.tasks (project_id, title) values ('${P}', 'Mine') returning id`));
+  await expectDenied('employee cannot create an unassigned task', () => as('emp1', `insert into public.tasks (project_id, title) values ('${P}', 'Mine') returning id`));
+  await expectDenied('employee cannot create a task for someone else', () => as('emp1', `insert into public.tasks (project_id, title, assignee_id) values ('${P}', 'Yours', '${U.pm1}') returning id`));
+  await expectDenied('non-member cannot add a task to the project', () => as('emp2', `insert into public.tasks (project_id, title, assignee_id) values ('${P}', 'Sneaky', '${U.emp2}') returning id`));
+  const [own] = await as('emp1', `insert into public.tasks (project_id, title, assignee_id) values ('${P}', 'My own to-do', '${U.emp1}') returning id, created_by`);
+  check('member can add a task assigned to themselves', !!own && own.created_by === U.emp1);
+  await expectOk('member edits title, priority and dates of their own task', () => as('emp1', `update public.tasks set title = 'Renamed', priority = 'high', due_date = '2030-01-01' where id = '${own.id}' returning id`));
+  await expectDenied('member cannot reassign their own task', () => as('emp1', `update public.tasks set assignee_id = '${U.pm1}' where id = '${own.id}' returning id`));
+  await expectDenied('member cannot unassign their own task', () => as('emp1', `update public.tasks set assignee_id = null where id = '${own.id}' returning id`));
+  await expectOk('PM can edit a member-created task', () => as('pm1', `update public.tasks set priority = 'low' where id = '${own.id}' returning id`));
+  await expectOk('member deletes their own task', () => as('emp1', `delete from public.tasks where id = '${own.id}' returning id`));
   await expectOk('assignee updates task status', () => as('emp1', `update public.tasks set status = 'in_progress' where id = '${T}'`));
   await expectOk('assignee updates task description', () => as('emp1', `update public.tasks set description = 'notes' where id = '${T}'`));
   await expectDenied('assignee cannot change the due date', () => as('emp1', `update public.tasks set due_date = '2030-01-01' where id = '${T}' returning id`));

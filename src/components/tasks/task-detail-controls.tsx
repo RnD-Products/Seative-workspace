@@ -11,7 +11,7 @@ import type { Profile, TaskStatus } from '@/lib/types';
 import type { TaskInput } from '@/lib/validation';
 import { updateTaskDescription, updateTaskStatus } from '@/app/actions/tasks';
 import { TaskForm } from './task-form';
-import type { ProjectRef } from './types';
+import type { Me, ProjectRef } from './types';
 
 export function StatusControl({ taskId, status }: { taskId: string; status: TaskStatus }) {
   const router = useRouter();
@@ -65,14 +65,14 @@ export function DescriptionEditor({ taskId, description, canEdit }: { taskId: st
   );
 }
 
-export function EditTaskDialog({ taskId, defaults, projects, people }: { taskId: string; defaults: TaskInput; projects: ProjectRef[]; people: Profile[] }) {
+export function EditTaskDialog({ taskId, defaults, projects, people, me }: { taskId: string; defaults: TaskInput; projects: ProjectRef[]; people: Profile[]; me: Me }) {
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild><Button variant="outline"><Pencil /> Edit task</Button></DialogTrigger>
       <DialogContent className="max-w-xl">
         <DialogHeader><DialogTitle>Edit task</DialogTitle></DialogHeader>
-        <TaskForm taskId={taskId} defaults={defaults} projects={projects} people={people} onDone={() => setOpen(false)} />
+        <TaskForm taskId={taskId} defaults={defaults} projects={projects} people={people} me={me} onDone={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   );

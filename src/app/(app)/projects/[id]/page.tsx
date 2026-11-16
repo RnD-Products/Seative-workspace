@@ -40,6 +40,7 @@ export default async function ProjectPage({ params, searchParams }: {
   ]);
   const peopleMap = byId(people);
   const manages = canManage(project, session.profile);
+  const isMember = memberIds.includes(session.userId);
   const manager = project.manager_id ? peopleMap.get(project.manager_id) : null;
   const ref = { id: project.id, name: project.name, manager_id: project.manager_id, memberIds };
   const members = memberIds.map((m) => peopleMap.get(m)).filter((p): p is NonNullable<typeof p> => Boolean(p));
@@ -71,13 +72,15 @@ export default async function ProjectPage({ params, searchParams }: {
       <PageHeader
         back={<Link href="/projects" className="text-sm text-muted-foreground hover:text-foreground">← Projects</Link>}
         title={project.name}
-        actions={manages && (
+        actions={manages ? (
           <>
             <Button asChild variant="ai"><Link href={`/projects/${id}/plan`}><Sparkles /> Draft tasks with AI</Link></Button>
             <Button asChild variant="outline"><Link href={`/projects/${id}/edit`}><Pencil /> Edit</Link></Button>
-            <NewTaskDialog projects={[ref]} people={people} defaults={{ project_id: id }} label="Add task" />
+            <NewTaskDialog projects={[ref]} people={people} me={session.profile} defaults={{ project_id: id }} label="Add task" />
           </>
-        )}
+        ) : isMember ? (
+          <NewTaskDialog projects={[ref]} people={people} me={session.profile} defaults={{ project_id: id }} label="Add my task" />
+        ) : undefined}
       />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -138,7 +141,7 @@ export default async function ProjectPage({ params, searchParams }: {
           me={session.profile}
           showProject={false}
           emptyTitle={filtersActive ? 'No tasks match these filters' : 'No tasks yet'}
-          emptyDescription={filtersActive ? 'Try clearing a filter.' : manages ? 'Add tasks one by one, or draft a plan with AI and pick the ones you want.' : 'Your project manager hasn’t added tasks yet.'}
+          emptyDescription={filtersActive ? 'Try clearing a filter.' : manages ? 'Add tasks one by one, or draft a plan with AI and pick the ones you want.' : isMember ? 'No tasks yet. Use “Add my task” to add something you’re working on.' : 'Your project manager hasn’t added tasks yet.'}
           emptyAction={!filtersActive && manages ? <Button asChild variant="ai"><Link href={`/projects/${id}/plan`}><Sparkles /> Draft tasks with AI</Link></Button> : undefined}
         />
       </section>

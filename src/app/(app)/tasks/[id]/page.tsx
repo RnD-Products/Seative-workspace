@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, PriorityBadge, TaskStatusBadge } from '@/components/badges';
 import { ActivityFeed } from '@/components/work-items';
 import { DescriptionEditor, EditTaskDialog, StatusControl } from '@/components/tasks/task-detail-controls';
+import { isOwnTask } from '@/components/tasks/types';
 import { DeleteTaskButton } from '@/components/delete-buttons';
 import { TaskAssistant } from '@/components/ai/task-assistant';
 import { CommentComposer } from '@/components/ai/comment-composer';
@@ -34,6 +35,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   const manages = canManage(project, session.profile);
   const isAssignee = task.assignee_id === session.userId;
   const canEditStatus = manages || isAssignee;
+  const canEditAll = manages || isOwnTask(task, session.profile);
   const assignee = task.assignee_id ? peopleMap.get(task.assignee_id) : null;
   const creator = task.created_by ? peopleMap.get(task.created_by) : null;
   const ref = { id: project.id, name: project.name, manager_id: project.manager_id, memberIds: (members ?? []).map((m) => m.profile_id as string) };
@@ -44,9 +46,9 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
       <PageHeader
         back={<Link href={`/projects/${project.id}`} className="text-sm text-muted-foreground hover:text-foreground">← {project.name}</Link>}
         title={task.title}
-        actions={manages && (
+        actions={canEditAll && (
           <>
-            <EditTaskDialog taskId={task.id} projects={[ref]} people={people} defaults={{
+            <EditTaskDialog taskId={task.id} projects={[ref]} people={people} me={session.profile} defaults={{
               project_id: task.project_id, title: task.title, description: task.description, status: task.status, priority: task.priority,
               assignee_id: task.assignee_id ?? '', start_date: task.start_date ?? '', due_date: task.due_date ?? '',
             }} />

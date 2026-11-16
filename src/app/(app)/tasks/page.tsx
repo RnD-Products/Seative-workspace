@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { TaskFilters } from '@/components/tasks/task-filters';
 import { TaskViews } from '@/components/tasks/task-views';
 import { NewTaskDialog } from '@/components/tasks/task-form';
-import { canManageRef } from '@/components/tasks/types';
+import { canAddTaskRef } from '@/components/tasks/types';
 import { requireSession } from '@/lib/session';
 import { db, listProfiles, listProjects, listTasks, parseFilters } from '@/lib/queries';
 
@@ -18,14 +18,14 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     listProjects(supabase), listProfiles(supabase), listTasks(supabase, session.userId, parseFilters(sp)),
   ]);
   const refs = projects.map((p) => ({ id: p.id, name: p.name, manager_id: p.manager_id, memberIds: p.memberIds }));
-  const manageable = refs.filter((p) => canManageRef(p, session.profile));
+  const addable = refs.filter((p) => canAddTaskRef(p, session.profile));
   return (
     <>
       <PageHeader
         title="All tasks"
         description="Every task in the projects you can see"
         back={<Link href="/projects" className="text-sm text-muted-foreground hover:text-foreground">← Projects</Link>}
-        actions={<NewTaskDialog projects={manageable} people={people} />}
+        actions={<NewTaskDialog projects={addable} people={people} me={session.profile} />}
       />
       <TaskFilters projects={refs} people={people} />
       <TaskViews
