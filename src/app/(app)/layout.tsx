@@ -13,7 +13,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const supabase = await createClient();
   // Sidebar list — RLS limits it to projects this user can see.
   const isManager = session.profile.role === 'pm' || session.profile.role === 'ceo';
-  const [{ data: projects }, { data: running }, { count: unread }, { data: incomingRows }, { data: blockerRows }] = await Promise.all([
+  const [{ data: projects }, { data: running }, { count: unread }, { data: incomingRows }, { data: blockerRows }, { data: chatRows }] = await Promise.all([
     supabase
       .from('projects')
       .select('id, name')
@@ -28,6 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('recipient_id', session.userId).is('read_at', null),
     isManager ? supabase.from('projects').select('id, manager_id').eq('status', 'incoming') : Promise.resolve({ data: [] as { id: string; manager_id: string | null }[] }),
     isManager ? supabase.from('blockers').select('id, projects(manager_id)').eq('status', 'open') : Promise.resolve({ data: [] as { id: string; projects: { manager_id: string | null } | null }[] }),
+    supabase.rpc('my_chats'),
   ]);
   const openBlockers = ((blockerRows ?? []) as unknown as { projects: { manager_id: string | null } | null }[]).filter((b) => session.profile.role === 'ceo' || b.projects?.manager_id === session.userId).length;
   const incoming = (incomingRows ?? []).filter((p) => session.profile.role === 'ceo' || !p.manager_id || p.manager_id === session.userId).length;
@@ -43,6 +44,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       unread={unread ?? 0}
       incoming={incoming}
       blockers={openBlockers}
+      chats={((chatRows ?? []) as { unread: number }[]).reduce((n, c) => n + (c.unread ?? 0), 0)}
     >
       {children}
     </AppShell>

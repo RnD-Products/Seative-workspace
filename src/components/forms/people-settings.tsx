@@ -45,6 +45,8 @@ const ALL: { key: string; label: string; roles?: Role[] }[] = [
   { key: 'incoming_project', label: 'A new deal arrives from Sales', roles: ['pm', 'ceo'] },
   { key: 'team_assigned', label: 'A team is assigned to my deal', roles: ['sales', 'ceo'] },
   { key: 'deadline_reminder', label: 'Project deadline reminders', roles: ['pm', 'ceo'] },
+  { key: 'chat_message', label: 'Someone sends me a private message' },
+  { key: 'chat_mention', label: 'Someone @mentions me in a project chat' },
 ];
 
 export function NotificationPrefs({ role, prefs }: { role: Role; prefs: Record<string, boolean> }) {

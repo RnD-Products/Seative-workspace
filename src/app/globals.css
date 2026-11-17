@@ -178,6 +178,8 @@
 }
 
 @layer utilities {
+  .chat-frame { height: calc(100dvh - 6.75rem); grid-template-rows: minmax(0, 1fr); }
+  @media (min-width: 1024px) { .chat-frame { height: calc(100dvh - 3.5rem); } }
   /* Glow layer — ambient light, lit edges, glowing actions. */
   .ambient {
     background:

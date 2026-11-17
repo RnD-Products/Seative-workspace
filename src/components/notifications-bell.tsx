@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlarmClock, Bell, BriefcaseBusiness, CheckCheck, Inbox, MessageSquare, OctagonAlert, UserPlus, Users } from 'lucide-react';
+import { AlarmClock, AtSign, Bell, BriefcaseBusiness, CheckCheck, Inbox, MessageSquare, OctagonAlert, UserPlus, Users } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/misc';
 import { RelTime } from '@/components/rel-time';
@@ -10,7 +10,7 @@ import { listNotifications, markAllRead, markRead, unreadCount, type Notificatio
 
 const ICON: Record<string, React.ComponentType<{ className?: string }>> = {
   task_assigned: BriefcaseBusiness, project_added: UserPlus, incoming_project: Inbox, team_assigned: Users,
-  deadline_reminder: AlarmClock, blocker: OctagonAlert, mention: MessageSquare, message: MessageSquare,
+  deadline_reminder: AlarmClock, blocker: OctagonAlert, mention: MessageSquare, message: MessageSquare, chat_mention: AtSign, chat_message: MessageSquare,
 };
 
 export function NotificationsBell({ initialUnread }: { initialUnread: number }) {

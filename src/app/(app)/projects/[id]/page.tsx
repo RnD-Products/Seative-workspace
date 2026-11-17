@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { CalendarDays, History, OctagonAlert, Pencil, Sparkles, Users } from 'lucide-react';
+import { CalendarDays, History, MessagesSquare, OctagonAlert, Pencil, Sparkles, Users } from 'lucide-react';
 import { BlockerRows, RaiseBlockerDialog } from '@/components/blockers/blocker-ui';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -103,6 +103,11 @@ export default async function ProjectPage({ params, searchParams }: {
     }
   }
   const aiEnabled = Boolean(process.env.ANTHROPIC_API_KEY);
+  const { data: chatRows } = await supabase.rpc('my_chats');
+  const chatUnread = ((chatRows ?? []) as { project_id: string | null; unread: number }[]).find((c) => c.project_id === id)?.unread ?? 0;
+  const chatButton = (
+    <Button asChild variant="outline"><Link href={`/projects/${id}/chat`}><MessagesSquare /> Team chat{chatUnread > 0 && <span className="rounded-full bg-primary px-1.5 text-[11px] font-semibold leading-[18px] text-primary-foreground">{chatUnread}</span>}</Link></Button>
+  );
 
   return (
     <>
@@ -111,13 +116,14 @@ export default async function ProjectPage({ params, searchParams }: {
         title={project.name}
         actions={manages ? (
           <>
+            {chatButton}
             <Button asChild variant="ai"><Link href={`/projects/${id}/plan`}><Sparkles /> Draft tasks with AI</Link></Button>
             <Button asChild variant="outline"><Link href={`/projects/${id}/edit`}><Pencil /> Edit</Link></Button>
             <NewTaskDialog projects={[ref]} people={people} me={session.profile} defaults={{ project_id: id }} label="Add task" />
           </>
         ) : isMember ? (
-          <NewTaskDialog projects={[ref]} people={people} me={session.profile} defaults={{ project_id: id }} label="Add my task" />
-        ) : undefined}
+          <>{chatButton}<NewTaskDialog projects={[ref]} people={people} me={session.profile} defaults={{ project_id: id }} label="Add my task" /></>
+        ) : chatButton}
       />
 
       {project.status === 'incoming' && (
