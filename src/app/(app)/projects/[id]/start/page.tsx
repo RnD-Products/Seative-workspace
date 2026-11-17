@@ -24,11 +24,11 @@ export default async function StartProjectPage({ params }: { params: Promise<{ i
   const [people, { data: sales }, { data: members }, { data: tasks }, { data: time }] = await Promise.all([
     listProfiles(supabase),
     supabase.from('project_sales').select('*').eq('project_id', id).maybeSingle(),
-    supabase.from('project_members').select('profile_id').eq('project_id', id),
+    supabase.from('project_members').select('profile_id, due_date, brief').eq('project_id', id),
     supabase.from('tasks').select('assignee_id, status, due_date').neq('status', 'done').not('assignee_id', 'is', null).limit(5000),
     supabase.from('time_entries').select('profile_id, minutes').gte('entry_date', weekStart).lte('entry_date', weekEnd).not('minutes', 'is', null).limit(5000),
   ]);
-  const current = new Set((members ?? []).map((m) => m.profile_id));
+  const current = new Map((members ?? []).map((m) => [m.profile_id as string, m as { due_date: string | null; brief: string }]));
   const today = todayISO();
   // Workload is what this manager can see (their projects; everything for the CEO).
   const candidates: Candidate[] = people
@@ -42,6 +42,8 @@ export default async function StartProjectPage({ params }: { params: Promise<{ i
         overdue: mine.filter((t) => t.due_date && t.due_date < today).length,
         weekMinutes: (time ?? []).filter((e) => e.profile_id === p.id).reduce((n, e) => n + (e.minutes ?? 0), 0),
         current: current.has(p.id),
+        dueDate: current.get(p.id)?.due_date ?? null,
+        brief: current.get(p.id)?.brief ?? '',
       };
     });
   const s = sales as ProjectSales | null;
@@ -51,13 +53,13 @@ export default async function StartProjectPage({ params }: { params: Promise<{ i
     <>
       <PageHeader
         back={<Link href={`/projects/${id}`} className="text-sm text-muted-foreground hover:text-foreground">← {project.name}</Link>}
-        title="Pick the team"
-        description={project.status === 'incoming' ? 'Choose designers and developers for this deal, then start the project. Everyone you pick is notified.' : 'Add more people to this project.'}
+        title={project.status === 'incoming' ? 'Pick the team and timeline' : 'Team and timeline'}
+        description={project.status === 'incoming' ? 'Set the timeline, choose designers and developers for this deal and give each of them a due date. Everyone you pick is notified.' : 'Change the timeline, add people, or update each person\'s due date.'}
       />
       <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
         <Card>
-          <CardHeader><div><CardTitle>People</CardTitle><CardDescription>Best skill matches first, then the least busy. Workload counts open tasks you can see and hours logged this week.</CardDescription></div></CardHeader>
-          <CardContent><TeamPicker projectId={id} candidates={candidates} required={s?.requirement_tags ?? []} defaultStart={project.start_date ?? today} /></CardContent>
+          <CardHeader><div><CardTitle>Timeline and people</CardTitle><CardDescription>Best skill matches first, then the least busy. Workload counts open tasks you can see and hours logged this week.</CardDescription></div></CardHeader>
+          <CardContent><TeamPicker projectId={id} candidates={candidates} required={s?.requirement_tags ?? []} defaultStart={project.start_date ?? today} defaultDue={project.due_date ?? s?.client_deadline ?? ''} clientDeadline={s?.client_deadline ?? null} isIncoming={project.status === 'incoming'} /></CardContent>
         </Card>
         <div className="space-y-4">{s ? <SalesCard sales={s} owner={owner} canEdit={false} compact /> : <Card><CardContent className="pt-4 text-[13px] text-muted-foreground">No sales info on this project.</CardContent></Card>}</div>
       </div>

@@ -2,6 +2,8 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { TEST_LOGIN_ENABLED } from '@/lib/test-login';
 import { fieldErrors, finishSetupSchema, setupSchema, signInSchema } from '@/lib/validation';
 import type { ActionResult } from '@/lib/types';
 
@@ -22,6 +24,10 @@ export async function signIn(input: unknown, next?: string): Promise<ActionResul
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  // TESTING ONLY: put the demo data back, so the next person sees the same starting point.
+  if (TEST_LOGIN_ENABLED) {
+    try { await createAdminClient().rpc('reset_demo_data'); } catch { /* the demo reset is best-effort */ }
+  }
   redirect('/login');
 }
 

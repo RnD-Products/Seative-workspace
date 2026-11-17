@@ -67,6 +67,7 @@ async function main() {
       $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
     create role anon nologin;
     create role authenticated nologin;
+    create role service_role nologin;
     grant usage on schema auth to anon, authenticated;
   `);
   for (const f of readdirSync('supabase/migrations').sort()) {
@@ -113,6 +114,13 @@ async function main() {
   await expectOk('PM adds an employee to their project', () => as('pm1', `insert into public.project_members (project_id, profile_id) values ('${P}', '${U.emp1}')`));
   await expectDenied('PM cannot add a member from another organization', () => as('pm1', `insert into public.project_members (project_id, profile_id) values ('${P}', '${U.empB}')`));
   await expectDenied('employee cannot add members', () => as('emp1', `insert into public.project_members (project_id, profile_id) values ('${P}', '${U.emp2}')`));
+
+  await expectOk('PM sets a due date for a team member', () => as('pm1', `update public.project_members set due_date = '2026-12-05', brief = 'UI/UX design' where project_id = '${P}' and profile_id = '${U.emp1}' returning profile_id`));
+  check('the member due date change is in the history', (await as('pm1', `select id from public.activity_log where project_id = '${P}' and action = 'member_due_changed'`)).length === 1);
+  await expectDenied('an employee cannot change their own due date', () => as('emp1', `update public.project_members set due_date = '2027-01-01' where project_id = '${P}' and profile_id = '${U.emp1}' returning profile_id`));
+  await expectDenied('another PM cannot change team due dates', () => as('pm2', `update public.project_members set due_date = '2027-01-01' where project_id = '${P}' returning profile_id`));
+  await expectDenied('a membership cannot be moved to someone else', () => as('pm1', `update public.project_members set profile_id = '${U.emp2}' where project_id = '${P}' and profile_id = '${U.emp1}' returning profile_id`));
+  await expectDenied('nobody can run the demo reset from the app', () => as('ceoA', `select public.reset_demo_data()`));
 
   const visible = async (u: keyof typeof U) => (await as(u, `select id from public.projects where id = '${P}'`)).length === 1;
   check('member employee can see the project', await visible('emp1'));

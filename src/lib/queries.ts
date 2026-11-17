@@ -66,7 +66,7 @@ export async function getProjectDetail(supabase: Supabase, id: string) {
   if (!project) return null;
   const [{ data: tasks }, { data: members }, { data: activity }, { data: blockers }] = await Promise.all([
     supabase.from('tasks').select('*').eq('project_id', id).order('position'),
-    supabase.from('project_members').select('profile_id').eq('project_id', id),
+    supabase.from('project_members').select('profile_id, due_date, brief').eq('project_id', id),
     supabase.from('activity_log').select('*').eq('project_id', id).order('created_at', { ascending: false }).limit(12),
     supabase.from('blockers').select('*').eq('project_id', id).order('status').order('created_at', { ascending: false }),
   ]);
@@ -78,6 +78,7 @@ export async function getProjectDetail(supabase: Supabase, id: string) {
     project,
     tasks: t,
     memberIds: (members ?? []).map((m) => m.profile_id as string),
+    memberDue: Object.fromEntries((members ?? []).map((m) => [m.profile_id as string, { due_date: (m.due_date as string | null) ?? null, brief: (m.brief as string) ?? '' }])),
     activity: (activity ?? []) as Activity[],
     blockers: bl,
     stats,

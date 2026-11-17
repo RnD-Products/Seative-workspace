@@ -18,7 +18,8 @@ import { RiskSignalsCard } from '@/components/ai/risk-signals-card';
 import { requireSession } from '@/lib/session';
 import { byId, canManage, db, getProjectDetail, listProfiles, listTasks, parseFilters } from '@/lib/queries';
 import { observeRisks } from '@/lib/ai/risk-facts';
-import { ROLE_LABEL, fmtDate, projectHealth, projectStats } from '@/lib/domain';
+import { ROLE_LABEL, fmtDate, projectHealth, projectStats, todayISO } from '@/lib/domain';
+import { cn } from '@/lib/utils';
 import { SalesCard } from '@/components/sales/sales-card';
 import { TakeProjectButton } from '@/components/sales/incoming-actions';
 import type { ProjectSales } from '@/lib/sales';
@@ -164,14 +165,19 @@ export default async function ProjectPage({ params, searchParams }: {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Users className="size-4" aria-hidden /> Members</CardTitle><span className="text-xs text-muted-foreground">{members.length}</span></CardHeader>
+          <CardHeader><CardTitle className="flex items-center gap-2"><Users className="size-4" aria-hidden /> Members <span className="text-xs font-normal text-muted-foreground">{members.length}</span></CardTitle>{manages && project.status !== 'incoming' && <Link href={`/projects/${id}/start`} className="text-[12px] text-primary hover:underline">Team and due dates</Link>}</CardHeader>
           <CardContent>
             {members.length ? (
               <ul className="space-y-2.5">
                 {members.map((m) => (
                   <li key={m.id} className="flex items-center gap-2.5 text-sm">
                     <Avatar person={m} size="md" />
-                    <div className="min-w-0"><p className="truncate font-medium">{m.full_name}</p><p className="truncate text-xs text-muted-foreground">{m.job_title ?? ROLE_LABEL[m.role]}</p></div>
+                    <div className="min-w-0 flex-1"><p className="truncate font-medium">{m.full_name}</p><p className="truncate text-xs text-muted-foreground">{detail.memberDue[m.id]?.brief || m.job_title || ROLE_LABEL[m.role]}</p></div>
+                    {detail.memberDue[m.id]?.due_date && (
+                      <span className={cn('shrink-0 rounded-md border px-1.5 py-0.5 text-[11px] tabular', detail.memberDue[m.id]!.due_date! < todayISO() ? 'border-destructive/30 bg-destructive-soft text-destructive' : 'border-border-strong text-muted-foreground')} title="Their due date on this project">
+                        Due {fmtDate(detail.memberDue[m.id]!.due_date!, 'd MMM')}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>

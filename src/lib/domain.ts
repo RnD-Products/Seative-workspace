@@ -108,6 +108,7 @@ const ACTIVITY_TEXT: Record<string, (d: Details) => string> = {
   project_description_changed: () => 'edited the project description',
   member_added: (d) => `added ${d.member} to the project`,
   member_removed: (d) => `removed ${d.member} from the project`,
+  member_due_changed: (d) => (d.from ? `changed ${d.person}'s due date: ${fmtDate(d.from as string)} → ${d.to ? fmtDate(d.to as string) : 'none'}` : `set ${d.person}'s due date to ${d.to ? fmtDate(d.to as string) : 'none'}`),
   task_created: (d) => `created “${d.title}”${d.assignee ? ` for ${d.assignee}` : ''}`,
   task_assigned: (d) => (d.from && d.to ? `reassigned “${d.title}”: ${d.from} → ${d.to}` : d.to ? `assigned “${d.title}” to ${d.to}` : `unassigned “${d.title}”${d.from ? ` (was ${d.from})` : ''}`),
   task_status_changed: (d) => `moved “${d.title}” from ${TASK_STATUS_LABEL[d.from as TaskStatus] ?? d.from} to ${TASK_STATUS_LABEL[d.to as TaskStatus] ?? d.to}`,

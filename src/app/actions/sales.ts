@@ -99,25 +99,65 @@ export async function assignManager(projectId: string, managerId: string): Promi
 }
 
 /** Add the chosen people and move the project from Incoming to Active. */
-export async function startProject(projectId: string, memberIds: string[], startDate?: string): Promise<ActionResult> {
+const memberPlan = z.object({
+  id: uuid,
+  due_date: z.preprocess((v) => (v === '' ? null : v), z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable()).default(null),
+  brief: z.string().trim().max(120).default(''),
+  create_task: z.boolean().default(false),
+});
+const startSchema = z.object({
+  members: z.array(memberPlan).max(50),
+  start_date: z.preprocess((v) => (v === '' ? null : v), z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable()).default(null),
+  due_date: z.preprocess((v) => (v === '' ? null : v), z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable()).default(null),
+});
+
+/**
+ * Pick the team and timeline. Each person can get their own due date and a short brief;
+ * optionally a task is created for them with that due date so it shows in their My Work.
+ */
+export async function startProject(projectId: string, input: unknown): Promise<ActionResult> {
   await requireSession();
-  const ids = z.array(uuid).max(50).safeParse(memberIds);
-  if (!uuid.safeParse(projectId).success || !ids.success) return { ok: false, error: 'Invalid selection' };
-  if (!ids.data.length) return { ok: false, error: 'Pick at least one person for the team.' };
+  const parsed = startSchema.safeParse(input);
+  if (!uuid.safeParse(projectId).success || !parsed.success) return { ok: false, error: parsed.success ? 'Invalid project' : parsed.error.issues[0]?.message ?? 'Check the dates' };
+  const { members, start_date, due_date } = parsed.data;
+  if (!members.length) return { ok: false, error: 'Pick at least one person for the team.' };
+  if (start_date && due_date && due_date < start_date) return { ok: false, error: 'The project due date is before the start date.' };
+  const late = members.find((m) => m.due_date && due_date && m.due_date > due_date);
+  if (late) return { ok: false, error: 'A person\'s due date is after the project due date. Move the project due date or their date.' };
   const supabase = await createClient();
+  const { data: project } = await supabase.from('projects').select('id, name, status').eq('id', projectId).maybeSingle();
+  if (!project) return { ok: false, error: 'Project not found' };
+
+  // Timeline first, so the permission check happens before anyone is added.
+  const patch: Record<string, string | null> = {};
+  if (project.status === 'incoming') patch.status = 'active';
+  if (start_date) patch.start_date = start_date;
+  if (due_date) patch.due_date = due_date;
+  const { data: upd, error: pErr } = await supabase.from('projects').update(Object.keys(patch).length ? patch : { status: project.status }).eq('id', projectId).select('id');
+  if (pErr) return { ok: false, error: friendly(pErr.message) };
+  if (!upd?.length) return { ok: false, error: 'Only the project manager or the CEO can start this project.' };
+
   const { data: existing } = await supabase.from('project_members').select('profile_id').eq('project_id', projectId);
   const have = new Set((existing ?? []).map((m) => m.profile_id));
-  const toAdd = ids.data.filter((id) => !have.has(id));
+  const toAdd = members.filter((m) => !have.has(m.id));
   if (toAdd.length) {
-    const { error } = await supabase.from('project_members').insert(toAdd.map((profile_id) => ({ project_id: projectId, profile_id })));
+    const { error } = await supabase.from('project_members').insert(toAdd.map((m) => ({ project_id: projectId, profile_id: m.id, due_date: m.due_date, brief: m.brief })));
     if (error) return { ok: false, error: friendly(error.message) };
   }
-  const patch: Record<string, string> = { status: 'active' };
-  if (startDate && /^\d{4}-\d{2}-\d{2}$/.test(startDate)) patch.start_date = startDate;
-  const { data, error } = await supabase.from('projects').update(patch).eq('id', projectId).select('id');
-  if (error) return { ok: false, error: friendly(error.message) };
-  if (!data?.length) return { ok: false, error: 'Only the project manager or the CEO can start this project.' };
+  for (const m of members.filter((x) => have.has(x.id))) {
+    const { error } = await supabase.from('project_members').update({ due_date: m.due_date, brief: m.brief }).eq('project_id', projectId).eq('profile_id', m.id);
+    if (error) return { ok: false, error: friendly(error.message) };
+  }
+  const tasks = members.filter((m) => m.create_task).map((m) => ({
+    project_id: projectId, assignee_id: m.id, due_date: m.due_date, title: m.brief || `Work on ${project.name}`,
+    description: `Set when the team was picked${m.due_date ? `, due ${m.due_date}` : ''}.`, priority: 'medium',
+  }));
+  if (tasks.length) {
+    const { error } = await supabase.from('tasks').insert(tasks);
+    if (error) return { ok: false, error: friendly(error.message) };
+  }
   revalidatePath('/', 'layout');
+  revalidatePath(`/projects/${projectId}`);
   return { ok: true };
 }
 
