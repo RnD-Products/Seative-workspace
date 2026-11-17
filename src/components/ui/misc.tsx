@@ -41,7 +41,7 @@ export function EmptyState({ icon: Icon, title, description, action, className }
 }
 
 export function Progress({ value, className, tone = 'primary' }: { value: number; className?: string; tone?: 'primary' | 'success' | 'warning' | 'destructive' }) {
-  const bar = { primary: 'bg-primary', success: 'bg-success', warning: 'bg-warning', destructive: 'bg-destructive' }[tone];
+  const bar = { primary: 'bar-glow', success: 'bg-success', warning: 'bg-warning', destructive: 'bg-destructive' }[tone];
   const v = Math.max(0, Math.min(100, Math.round(value)));
   return (
     <div className={cn('h-1 w-full overflow-hidden rounded-full bg-foreground/[0.08]', className)} role="progressbar" aria-valuenow={v} aria-valuemin={0} aria-valuemax={100}>

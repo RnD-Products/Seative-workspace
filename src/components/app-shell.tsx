@@ -43,14 +43,14 @@ export function AppShell({ user, orgName, projects, canCreate, children }: {
 
   const navItem = (active: boolean) => cn(
     'group flex h-8 items-center gap-2.5 rounded-md px-2 text-[13px] font-medium text-ink-foreground transition-colors duration-150 hover:bg-foreground/[0.05] hover:text-ink-strong active:bg-foreground/[0.08]',
-    active && 'bg-foreground/[0.07] text-ink-strong',
+    active && 'bg-foreground/[0.07] text-ink-strong shadow-[inset_0_1px_0_var(--edge),0_0_0_1px_var(--border)]',
   );
 
   const sidebar = (
     <div className="flex h-full flex-col gap-5 bg-shell px-2.5 pb-3 pt-3">
       <div className="flex items-center gap-1">
         <Link href="/" className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1.5 py-1 hover:bg-foreground/[0.05]">
-          <span aria-hidden className="grid size-[22px] shrink-0 place-items-center rounded-[6px] bg-primary text-[12px] font-bold text-white">S</span>
+          <span aria-hidden className="glow-primary grid size-[22px] shrink-0 place-items-center rounded-[6px] text-[12px] font-bold text-white">S</span>
           <span className="truncate text-[13px] font-semibold text-ink-strong">{orgName}</span>
         </Link>
         <button onClick={() => setPalette(true)} className="grid size-7 place-items-center rounded-md text-ink-foreground hover:bg-foreground/[0.06] hover:text-ink-strong" title={`Search (${isMac ? '⌘' : 'Ctrl'} K)`}>
@@ -66,7 +66,7 @@ export function AppShell({ user, orgName, projects, canCreate, children }: {
       <nav aria-label="Main" className="flex flex-col gap-px">
         {NAV.map(({ href, label, icon: Icon }) => (
           <Link key={href} href={href} aria-current={isActive(href) ? 'page' : undefined} className={navItem(isActive(href))}>
-            <Icon className={cn('size-4 opacity-70 group-hover:opacity-100', isActive(href) && 'opacity-100')} aria-hidden /> {label}
+            <Icon className={cn('size-4 opacity-70 group-hover:opacity-100', isActive(href) && 'text-primary opacity-100 drop-shadow-[0_0_6px_var(--primary)]')} aria-hidden /> {label}
           </Link>
         ))}
         <Link href="/ask" aria-current={pathname === '/ask' ? 'page' : undefined} className={navItem(pathname === '/ask')}>
@@ -125,8 +125,8 @@ export function AppShell({ user, orgName, projects, canCreate, children }: {
         </div>
       )}
 
-      <div className="flex min-w-0 flex-col bg-background lg:my-2 lg:mr-2 lg:overflow-y-auto lg:rounded-lg lg:border" data-scroll-root>
-        <header className="sticky top-0 z-30 flex h-11 shrink-0 items-center gap-2 border-b bg-background/90 px-3 backdrop-blur-md sm:px-5 lg:hidden">
+      <div className="ambient flex min-w-0 flex-col lg:my-2 lg:mr-2 lg:overflow-y-auto lg:rounded-xl lg:border lg:shadow-[0_0_0_1px_var(--edge),0_20px_60px_-30px_rgb(0_0_0/0.6)]" data-scroll-root>
+        <header className="sticky top-0 z-30 flex h-11 shrink-0 items-center gap-2 border-b bg-background/70 px-3 backdrop-blur-xl sm:px-5 lg:hidden">
           <button onClick={() => setOpen(true)} className="grid size-8 place-items-center rounded-md hover:bg-muted" aria-label="Open menu" aria-expanded={open}>
             <Menu className="size-4" />
           </button>

@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 
 /** Panels are flat (border only). Only things you can pick up get a shadow. */
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('min-w-0 rounded-lg border bg-card', className)} {...props} />;
+  return <div className={cn('sheen min-w-0 rounded-lg border bg-card', className)} {...props} />;
 }
 export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return <div className={cn('flex items-start justify-between gap-3 px-4 pt-3.5', className)} {...props} />;

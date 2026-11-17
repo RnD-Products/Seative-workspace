@@ -86,10 +86,10 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
             const late = left !== null && left < 0 && p.status !== 'completed';
             return (
               <li key={p.id}>
-                <Link href={`/projects/${p.id}`} className="lift group relative flex h-full flex-col overflow-hidden rounded-lg border bg-card p-4 hover:border-border-strong hover:bg-raised">
+                <Link href={`/projects/${p.id}`} className="lift sheen glow-ring group relative flex h-full flex-col overflow-hidden rounded-lg border bg-card p-4 hover:border-primary/40">
                                     <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-md text-[12px] font-semibold text-white" style={{ background: color }}>{p.name.trim()[0]?.toUpperCase()}</span>
+                      <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-md text-[12px] font-semibold text-white" style={{ background: color, boxShadow: `0 0 16px -2px ${color}` }}>{p.name.trim()[0]?.toUpperCase()}</span>
                       <div className="min-w-0">
                         <h2 className="truncate text-[14px] font-semibold">{p.name}</h2>
                         <p className="truncate text-[12px] text-muted-foreground">{manager ? `Led by ${manager.full_name}` : 'No manager yet'}</p>
@@ -103,7 +103,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
                       <span className="text-muted-foreground">{p.stats.done} of {p.stats.total} tasks done</span>
                       <span className="font-medium text-foreground tabular">{p.stats.percent}%</span>
                     </div>
-                    <div className="h-1 overflow-hidden rounded-full bg-foreground/[0.08]"><div className="h-full rounded-full" style={{ width: `${p.stats.percent}%`, background: color }} /></div>
+                    <div className="h-1 overflow-hidden rounded-full bg-foreground/[0.08]"><div className="h-full rounded-full" style={{ width: `${p.stats.percent}%`, background: color, boxShadow: `0 0 10px ${color}` }} /></div>
                   </div>
                   <div className="mt-auto flex items-center justify-between gap-3 border-t pt-3 mt-4">
                     <div className="flex -space-x-1.5">

@@ -12,11 +12,11 @@ export function StatCard({ label, value, hint, tone, icon: Icon }: {
 }) {
   const alert = Number(value) > 0 && tone;
   return (
-    <Card className="px-4 py-3.5">
+    <Card className="glow-ring px-4 py-3.5 transition-shadow duration-300">
       <p className="flex items-center gap-1.5 text-[12.5px] text-muted-foreground">
         {Icon && <Icon className={cn('size-3.5', alert === 'red' && 'text-destructive', alert === 'amber' && 'text-deadline')} />}{label}
       </p>
-      <p className={cn('mt-1.5 text-[24px] font-semibold leading-none tracking-[-0.025em] tabular', alert === 'red' && 'text-destructive', alert === 'amber' && 'text-deadline')}>{value}</p>
+      <p className={cn('mt-1.5 text-[26px] font-semibold leading-none tracking-[-0.03em] tabular', alert === 'red' ? 'text-destructive drop-shadow-[0_0_12px_var(--destructive)]' : alert === 'amber' ? 'text-deadline drop-shadow-[0_0_12px_var(--deadline)]' : 'text-gradient')}>{value}</p>
       {hint && <p className="mt-1.5 text-[12px] text-muted-foreground">{hint}</p>}
     </Card>
   );

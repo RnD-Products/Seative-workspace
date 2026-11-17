@@ -129,7 +129,7 @@ function Board({ tasks, move, canEdit, projectMap, peopleMap, showProject }: {
                     draggable={editable}
                     onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; setDragId(t.id); }}
                     onDragEnd={() => { setDragId(null); setOver(null); }}
-                    className={cn('lift rounded-md border border-border-strong/70 bg-card p-2.5 hover:border-border-strong hover:bg-raised', editable && 'cursor-grab active:cursor-grabbing', dragId === t.id && 'opacity-40')}
+                    className={cn('lift sheen glow-ring rounded-md border border-border-strong/70 bg-card p-2.5 hover:border-primary/40', editable && 'cursor-grab active:cursor-grabbing', dragId === t.id && 'opacity-40')}
                   >
                     {showProject && <p className="mb-1 flex items-center gap-1.5 truncate text-[12px] text-muted-foreground"><span aria-hidden className="size-2 rounded-[2px]" style={{ background: projectColor(t.project_id) }} />{projectMap.get(t.project_id)?.name}</p>}
                     <Link href={`/tasks/${t.id}`} className="block text-[13px] font-medium leading-snug">{t.title}</Link>
