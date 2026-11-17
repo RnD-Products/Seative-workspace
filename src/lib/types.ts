@@ -1,5 +1,5 @@
-export type Role = 'employee' | 'pm' | 'ceo';
-export type ProjectStatus = 'planning' | 'active' | 'on_hold' | 'completed';
+export type Role = 'employee' | 'sales' | 'pm' | 'ceo';
+export type ProjectStatus = 'incoming' | 'planning' | 'active' | 'on_hold' | 'completed';
 export type Priority = 'low' | 'medium' | 'high' | 'urgent';
 export type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'done';
 export type ArtifactKind = 'project_plan' | 'progress_summary' | 'risk_signal' | 'org_summary';
@@ -14,6 +14,8 @@ export interface Profile {
   email: string;
   role: Role;
   job_title: string | null;
+  skills?: string[];
+  notification_prefs?: Record<string, boolean>;
   created_at: string;
 }
 

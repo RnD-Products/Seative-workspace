@@ -1,11 +1,14 @@
 import Link from 'next/link';
-import { AlarmClock, CheckCircle2, CircleCheckBig, FolderKanban, Inbox, ListTodo, Percent, TriangleAlert } from 'lucide-react';
+import { AlarmClock, BadgeDollarSign, CheckCircle2, Plus, CircleCheckBig, FolderKanban, Inbox, ListTodo, Percent, TriangleAlert } from 'lucide-react';
 import { WeekStrip } from '@/components/week-strip';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EmptyState, Progress } from '@/components/ui/misc';
-import { HealthBadge, Avatar } from '@/components/badges';
+import { HealthBadge, Avatar, ProjectStatusBadge } from '@/components/badges';
+import { Badge } from '@/components/ui/badge';
+import { PAYMENT_STATUS_LABEL, PAYMENT_TONE, fmtMoney, outstanding, type ProjectSales } from '@/lib/sales';
+import { format } from 'date-fns';
 import { ActivityFeed, StatCard, TaskRow } from '@/components/work-items';
 import { CategoryBars, WorkloadBars } from '@/components/charts';
 import { OrgSummaryCard } from '@/components/ai/org-summary-card';
@@ -18,7 +21,7 @@ import type { Activity, Artifact, Task } from '@/lib/types';
 export const metadata = { title: 'Overview' };
 
 const STATUS_COLOR = { todo: '#94a0b8', in_progress: '#2f6fd6', in_review: '#e09b26', done: '#17a673' };
-const PROJECT_COLOR = { planning: '#5b6cff', active: '#2f6fd6', on_hold: '#e09b26', completed: '#17a673' };
+const PROJECT_COLOR = { incoming: '#e09b26', planning: '#5b6cff', active: '#2f6fd6', on_hold: '#e09b26', completed: '#17a673' };
 
 export default async function OverviewPage() {
   const session = await requireSession();
@@ -38,6 +41,60 @@ export default async function OverviewPage() {
   const greeting = `${hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'}, ${profile.full_name.split(' ')[0]}`;
   const today = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Dhaka' }).format(new Date());
   const projectNames = new Map(projects.map((p) => [p.id, p.name]));
+
+  // ---------------- Sales ----------------
+  if (profile.role === 'sales') {
+    const { data: salesRows } = await supabase.from('project_sales').select('*');
+    const deals = ((salesRows ?? []) as ProjectSales[]);
+    const dealBy = new Map(deals.map((d) => [d.project_id, d]));
+    const myProjects = projects.filter((p) => dealBy.has(p.id));
+    const open = myProjects.filter((p) => p.status !== 'completed');
+    const monthStart = format(new Date(), 'yyyy-MM-01');
+    const sum = (rows: ProjectSales[], f: (r: ProjectSales) => number) => (['BDT', 'USD'] as const)
+      .map((c) => ({ c, v: rows.filter((r) => r.currency === c).reduce((n, r) => n + f(r), 0) })).filter((x) => x.v > 0);
+    const money = (xs: { c: 'BDT' | 'USD'; v: number }[]) => xs.length ? xs.map((x) => fmtMoney(x.v, x.c)).join(' + ') : '0';
+    const thisMonth = deals.filter((d) => (d.deal_date ?? d.created_at.slice(0, 10)) >= monthStart);
+    return (
+      <>
+        <PageHeader title={greeting} description={today} actions={<Button asChild><Link href="/deals/new"><Plus /> New deal</Link></Button>} />
+        <div className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatCard icon={FolderKanban} label="Open deals" value={open.length} />
+          <StatCard icon={Inbox} label="Waiting for a PM" value={myProjects.filter((p) => p.status === 'incoming').length} tone="amber" />
+          <StatCard icon={BadgeDollarSign} label="Signed this month" value={money(sum(thisMonth, (r) => Number(r.contract_amount ?? 0)))} hint={`${thisMonth.length} ${thisMonth.length === 1 ? 'deal' : 'deals'}`} />
+          <StatCard icon={AlarmClock} label="Still to collect" value={money(sum(deals, outstanding))} tone="amber" />
+        </div>
+        <Card className="mt-4">
+          <CardHeader><div><CardTitle>Your deals</CardTitle><CardDescription>Progress and payments for every project you sold.</CardDescription></div></CardHeader>
+          {myProjects.length === 0 ? (
+            <EmptyState icon={BadgeDollarSign} title="No deals yet" description="Add a deal when a client signs. Project managers are notified to pick it up." action={<Button asChild><Link href="/deals/new"><Plus /> New deal</Link></Button>} />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[720px] text-[13px]">
+                <thead className="border-y bg-muted/40 text-left text-[12px] text-muted-foreground">
+                  <tr><th className="py-2 pl-4 font-medium">Project</th><th className="py-2 font-medium">Status</th><th className="py-2 font-medium">Progress</th><th className="py-2 font-medium">Client deadline</th><th className="py-2 text-right font-medium">Contract</th><th className="py-2 pl-4 pr-4 font-medium">Payment</th></tr>
+                </thead>
+                <tbody className="divide-y">
+                  {myProjects.map((p) => {
+                    const d = dealBy.get(p.id)!;
+                    return (
+                      <tr key={p.id} className="hover:bg-foreground/[0.02]">
+                        <td className="py-2.5 pl-4"><Link href={`/projects/${p.id}`} className="font-medium hover:underline">{p.name}</Link><span className="block text-[12px] text-muted-foreground">{d.client_name}</span></td>
+                        <td className="py-2.5"><ProjectStatusBadge status={p.status} /></td>
+                        <td className="w-40 py-2.5"><div className="flex items-center gap-2"><Progress value={p.stats.percent} /><span className="text-[12px] tabular">{p.stats.percent}%</span></div></td>
+                        <td className="py-2.5 tabular">{fmtDate(d.client_deadline ?? p.due_date, 'd MMM yyyy')}</td>
+                        <td className="py-2.5 text-right font-medium tabular">{fmtMoney(d.contract_amount, d.currency)}</td>
+                        <td className="py-2.5 pl-4 pr-4"><Badge tone={PAYMENT_TONE[d.payment_status]} dot>{PAYMENT_STATUS_LABEL[d.payment_status]}</Badge></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      </>
+    );
+  }
 
   // ---------------- Employee ----------------
   if (profile.role === 'employee') {
@@ -105,6 +162,17 @@ export default async function OverviewPage() {
   return (
     <>
       <PageHeader title={greeting} description={isCeo ? `${today}. Here's the whole company.` : `${today}. Here are the projects you manage.`} />
+      {(() => {
+        const incoming = projects.filter((p) => p.status === 'incoming' && (isCeo || !p.manager_id || p.manager_id === profile.id));
+        if (!incoming.length) return null;
+        return (
+          <Link href="/incoming" className="mb-4 flex items-center gap-3 rounded-lg border border-deadline/30 bg-deadline-soft px-4 py-3 text-[13px] transition-colors hover:border-deadline/50">
+            <Inbox className="size-4 text-deadline" aria-hidden />
+            <span className="flex-1"><span className="font-semibold text-deadline">{incoming.length} incoming {incoming.length === 1 ? 'project' : 'projects'}</span> from Sales {isCeo ? 'need a project manager or a team.' : 'are waiting to be picked up.'}</span>
+            <span className="font-medium text-deadline">Review →</span>
+          </Link>
+        );
+      })()}
       <WeekStrip tasks={scopedTasks} projectNames={projectNames} title={isCeo ? 'This week across the company' : 'This week on your projects'} />
       <div className="stagger mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard icon={FolderKanban} label={isCeo ? 'Active projects' : 'Your active projects'} value={live.length} hint={needsAttention.length ? `${needsAttention.length} need attention` : 'All on track'} />

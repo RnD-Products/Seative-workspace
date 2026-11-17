@@ -17,8 +17,11 @@ import { RiskSignalsCard } from '@/components/ai/risk-signals-card';
 import { requireSession } from '@/lib/session';
 import { byId, canManage, db, getProjectDetail, listProfiles, listTasks, parseFilters } from '@/lib/queries';
 import { observeRisks } from '@/lib/ai/risk-facts';
-import { ROLE_LABEL, fmtDate } from '@/lib/domain';
-import type { Artifact } from '@/lib/types';
+import { ROLE_LABEL, fmtDate, projectHealth, projectStats } from '@/lib/domain';
+import { SalesCard } from '@/components/sales/sales-card';
+import { TakeProjectButton } from '@/components/sales/incoming-actions';
+import type { ProjectSales } from '@/lib/sales';
+import type { Artifact, Task } from '@/lib/types';
 import type { ProgressSummary, RiskSignalContent } from '@/lib/ai/schemas';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -36,7 +39,7 @@ export default async function ProjectPage({ params, searchParams }: {
   const detail = await getProjectDetail(supabase, id);
   if (!detail) notFound(); // also covers "exists but you can't see it" — RLS hides it
   const { project, memberIds, activity, stats, health } = detail;
-  const [people, filteredTasks, { data: timeData }, { data: myRun }] = await Promise.all([
+  const [people, filteredTasks, { data: timeData }, { data: myRun }, { data: salesRow }] = await Promise.all([
     listProfiles(supabase),
     listTasks(supabase, session.userId, { ...parseFilters(sp), project: id }),
     supabase.from('time_entries').select('id, task_id, profile_id, entry_date, minutes, note')
@@ -44,7 +47,9 @@ export default async function ProjectPage({ params, searchParams }: {
       .order('entry_date', { ascending: false }).order('created_at', { ascending: false }).limit(1000),
     supabase.from('time_entries').select('id, project_id, task_id, started_at, projects(name), tasks(title)')
       .eq('profile_id', session.userId).is('minutes', null).is('ended_at', null).maybeSingle(),
+    supabase.from('project_sales').select('*').eq('project_id', id).maybeSingle(),
   ]);
+  const sales = salesRow as ProjectSales | null;
   const timeRows = (timeData ?? []) as TimeRow[];
   const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 0 }), 'yyyy-MM-dd');
   const byPerson = new Map<string, number>();
@@ -59,6 +64,17 @@ export default async function ProjectPage({ params, searchParams }: {
   const peopleMap = byId(people);
   const manages = canManage(project, session.profile);
   const isMember = memberIds.includes(session.userId);
+  // Salespeople who are not on the team get a read-only deal view: no tasks, time or chat.
+  const dealView = session.profile.role === 'sales' && !isMember && !manages;
+  let shownStats = stats;
+  let shownHealth = health;
+  if (dealView) {
+    const { data: rows } = await supabase.rpc('deal_task_rows');
+    const mine = ((rows ?? []) as { project_id: string; status: Task['status']; due_date: string | null }[]).filter((r) => r.project_id === id);
+    shownStats = projectStats(mine);
+    shownHealth = projectHealth(project, shownStats);
+  }
+  const canTake = project.status === 'incoming' && !project.manager_id && session.profile.role === 'pm';
   const manager = project.manager_id ? peopleMap.get(project.manager_id) : null;
   const ref = { id: project.id, name: project.name, manager_id: project.manager_id, memberIds };
   const members = memberIds.map((m) => peopleMap.get(m)).filter((p): p is NonNullable<typeof p> => Boolean(p));
@@ -101,12 +117,28 @@ export default async function ProjectPage({ params, searchParams }: {
         ) : undefined}
       />
 
+      {project.status === 'incoming' && (
+        <div className="mb-4 flex flex-col gap-3 rounded-lg border border-deadline/30 bg-deadline-soft px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[13px] font-semibold text-deadline">Incoming project</p>
+            <p className="text-[13px] text-foreground/80">
+              {!project.manager_id ? 'A new deal from Sales. It needs a project manager.' : manages ? 'Pick the team to start this project.' : `Waiting for ${manager?.full_name ?? 'the PM'} to pick the team.`}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            {canTake && <TakeProjectButton projectId={id} name={project.name} />}
+            {manages && project.manager_id && <Button asChild><Link href={`/projects/${id}/start`}><Users /> Pick team &amp; start</Link></Button>}
+            {session.profile.role === 'ceo' && !project.manager_id && <Button asChild variant="outline"><Link href="/incoming">Assign a PM</Link></Button>}
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <Card>
           <CardContent className="space-y-5 pt-5">
             <div className="flex flex-wrap gap-2">
               <ProjectStatusBadge status={project.status} />
-              <HealthBadge health={health} />
+              <HealthBadge health={shownHealth} />
               <PriorityBadge priority={project.priority} />
             </div>
             <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/80">{project.description || <span className="text-muted-foreground">No description yet.</span>}</p>
@@ -115,8 +147,8 @@ export default async function ProjectPage({ params, searchParams }: {
               <div><dt className="text-xs text-muted-foreground">Timeline</dt><dd className="mt-1 flex items-center gap-1.5 font-medium"><CalendarDays className="size-4 text-muted-foreground" aria-hidden />{fmtDate(project.start_date, 'd MMM')} – {fmtDate(project.due_date, 'd MMM yyyy')}</dd></div>
               <div>
                 <dt className="text-xs text-muted-foreground">Progress</dt>
-                <dd className="mt-1.5"><div className="flex items-center gap-2"><Progress value={stats.percent} /><span className="text-xs tabular-nums">{stats.percent}%</span></div>
-                  <p className="mt-1 text-xs text-muted-foreground">{stats.done}/{stats.total} done{stats.overdue ? ` · ${stats.overdue} overdue` : ''}</p></dd>
+                <dd className="mt-1.5"><div className="flex items-center gap-2"><Progress value={shownStats.percent} /><span className="text-xs tabular-nums">{shownStats.percent}%</span></div>
+                  <p className="mt-1 text-xs text-muted-foreground">{shownStats.done}/{shownStats.total} done{shownStats.overdue ? ` · ${shownStats.overdue} overdue` : ''}</p></dd>
               </div>
             </dl>
           </CardContent>
@@ -141,13 +173,22 @@ export default async function ProjectPage({ params, searchParams }: {
         </Card>
       </div>
 
-      {manages && (
+      {sales && (
+        <div className="mt-6">
+          <SalesCard sales={sales} owner={sales.sales_owner_id ? peopleMap.get(sales.sales_owner_id) ?? null : null}
+            canEdit={session.profile.role === 'ceo' || sales.sales_owner_id === session.userId}
+            minutesLogged={dealView ? undefined : timeTotals.total} />
+        </div>
+      )}
+
+      {manages && project.status !== 'incoming' && (
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <ProgressSummaryCard projectId={id} latest={latestSummary} aiEnabled={aiEnabled} />
           <RiskSignalsCard projectId={id} facts={observeRisks(project, detail.tasks, recentComments)} signals={signals} taskTitles={Object.fromEntries(detail.tasks.map((t) => [t.id, t.title]))} aiEnabled={aiEnabled} />
         </div>
       )}
 
+      {!dealView && (<>
       <section className="mt-8" aria-labelledby="tasks-heading">
         <h2 id="tasks-heading" className="mb-3 text-lg font-semibold">Tasks</h2>
         <TaskFilters people={people.filter((p) => memberIds.includes(p.id) || p.id === project.manager_id)} hide={['project']} />
@@ -178,6 +219,7 @@ export default async function ProjectPage({ params, searchParams }: {
           meId={session.userId}
         />
       </section>
+      </>)}
 
       <Card className="mt-8">
         <CardHeader><CardTitle>Activity</CardTitle><CardDescription>Who changed what, and when</CardDescription></CardHeader>

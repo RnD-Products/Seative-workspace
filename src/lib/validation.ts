@@ -13,7 +13,7 @@ const dateString = z
 const uuid = z.string().uuid('Invalid id');
 const optionalUuid = z.union([z.literal(''), uuid]).default('');
 
-export const roleEnum = z.enum(['employee', 'pm', 'ceo']);
+export const roleEnum = z.enum(['employee', 'sales', 'pm', 'ceo']);
 export const projectStatusEnum = z.enum(['planning', 'active', 'on_hold', 'completed']);
 export const priorityEnum = z.enum(['low', 'medium', 'high', 'urgent']);
 export const taskStatusEnum = z.enum(['todo', 'in_progress', 'in_review', 'done']);

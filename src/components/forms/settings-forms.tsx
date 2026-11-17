@@ -12,7 +12,7 @@ import { FormField } from '@/components/ui/label';
 import { Alert, Spinner } from '@/components/ui/misc';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { newMemberSchema, profileSchema, type NewMemberInput } from '@/lib/validation';
-import { ROLE_LABEL } from '@/lib/domain';
+import { ROLES, ROLE_LABEL } from '@/lib/domain';
 import type { Role } from '@/lib/types';
 import { addMember, changeRole, updateMyProfile, updateOrganization } from '@/app/actions/members';
 
@@ -62,7 +62,7 @@ export function RoleSelect({ profileId, role, disabled }: { profileId: string; r
         const next = e.target.value as Role; const prev = value; setValue(next); setError(null);
         start(async () => { const r = await changeRole(profileId, next); if (!r.ok) { setValue(prev); setError(r.error); } else { toast(`Role changed to ${ROLE_LABEL[next]}`); router.refresh(); } });
       }}>
-        {(['employee', 'pm', 'ceo'] as Role[]).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
+        {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
       </NativeSelect>
       {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
     </div>
@@ -94,7 +94,7 @@ export function AddMemberDialog({ canCreate }: { canCreate: boolean }) {
           <FormField id="m-name" label="Full name" error={errors.fullName?.message}><Input {...form.register('fullName')} /></FormField>
           <FormField id="m-email" label="Email" error={errors.email?.message}><Input type="email" {...form.register('email')} /></FormField>
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField id="m-role" label="Role"><NativeSelect {...form.register('role')}>{(['employee', 'pm', 'ceo'] as Role[]).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</NativeSelect></FormField>
+            <FormField id="m-role" label="Role"><NativeSelect {...form.register('role')}>{ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</NativeSelect></FormField>
             <FormField id="m-title" label="Job title (optional)" error={errors.jobTitle?.message}><Input {...form.register('jobTitle')} /></FormField>
           </div>
           <FormField id="m-pass" label="Temporary password" hint="At least 8 characters." error={errors.password?.message}><Input type="text" autoComplete="off" {...form.register('password')} /></FormField>

@@ -24,7 +24,7 @@ export default async function TeamPage() {
   const scopedProjects = profile.role === 'ceo' ? projects : profile.role === 'pm' ? projects.filter((p) => p.manager_id === profile.id) : projects;
   const scopedIds = new Set(scopedProjects.map((p) => p.id));
   const memberSet = new Set(scopedProjects.flatMap((p) => [...p.memberIds, p.manager_id].filter(Boolean) as string[]));
-  const visiblePeople = profile.role === 'ceo' ? people : people.filter((p) => memberSet.has(p.id) || p.id === profile.id);
+  const visiblePeople = (profile.role === 'ceo' ? people : people.filter((p) => memberSet.has(p.id) || p.id === profile.id)).filter((p) => p.role !== 'sales');
   const scopedTasks = tasks.filter((t) => scopedIds.has(t.project_id));
   const showNumbers = profile.role !== 'employee';
 
@@ -77,6 +77,7 @@ export default async function TeamPage() {
                         <div className="min-w-0">
                           <p className="font-medium">{r.person.full_name}{r.person.id === profile.id && <span className="ml-1 text-xs text-muted-foreground">(you)</span>}</p>
                           <p className="flex items-center gap-2 text-xs text-muted-foreground">{r.person.job_title ?? ''} <RoleBadge role={r.person.role} /></p>
+                          {(r.person.skills ?? []).length > 0 && <p className="mt-1 flex flex-wrap gap-1">{(r.person.skills ?? []).map((sk) => <span key={sk} className="rounded-[4px] border border-border-strong px-1.5 text-[11px] text-muted-foreground">{sk}</span>)}</p>}
                         </div>
                       </div>
                     </td>
