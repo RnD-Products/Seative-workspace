@@ -1,4 +1,5 @@
 'use client';
+import { toast } from '@/components/ui/toast';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -59,7 +60,7 @@ export function RoleSelect({ profileId, role, disabled }: { profileId: string; r
     <div>
       <NativeSelect aria-label="Role" value={value} disabled={disabled || pending} className="h-8 w-44 text-[13px]" onChange={(e) => {
         const next = e.target.value as Role; const prev = value; setValue(next); setError(null);
-        start(async () => { const r = await changeRole(profileId, next); if (!r.ok) { setValue(prev); setError(r.error); } else router.refresh(); });
+        start(async () => { const r = await changeRole(profileId, next); if (!r.ok) { setValue(prev); setError(r.error); } else { toast(`Role changed to ${ROLE_LABEL[next]}`); router.refresh(); } });
       }}>
         {(['employee', 'pm', 'ceo'] as Role[]).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
       </NativeSelect>
@@ -88,7 +89,7 @@ export function AddMemberDialog({ canCreate }: { canCreate: boolean }) {
         <form noValidate className="space-y-4" onSubmit={form.handleSubmit((v) => start(async () => {
           const r = await addMember(v);
           if (!r.ok) { setMsg({ tone: 'error', text: r.error }); Object.entries(r.fieldErrors ?? {}).forEach(([k, e]) => form.setError(k as keyof NewMemberInput, { message: e[0] })); return; }
-          setMsg({ tone: 'success', text: r.message ?? 'Member added' }); form.reset(); router.refresh();
+          setMsg({ tone: 'success', text: r.message ?? 'Member added' }); toast(`${v.fullName} added`); form.reset(); router.refresh();
         }))}>
           <FormField id="m-name" label="Full name" error={errors.fullName?.message}><Input {...form.register('fullName')} /></FormField>
           <FormField id="m-email" label="Email" error={errors.email?.message}><Input type="email" {...form.register('email')} /></FormField>

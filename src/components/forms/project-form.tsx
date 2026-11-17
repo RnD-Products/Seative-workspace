@@ -1,4 +1,5 @@
 'use client';
+import { toast } from '@/components/ui/toast';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -51,6 +52,7 @@ export function ProjectForm({ projectId, defaults, people, me }: {
           return;
         }
         const id = projectId ?? (res.data as { id: string }).id;
+        toast(projectId ? 'Project saved' : `Project “${values.name}” created`);
         router.push(`/projects/${id}`);
         router.refresh();
       }))}

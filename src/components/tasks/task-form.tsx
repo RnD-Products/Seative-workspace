@@ -1,5 +1,6 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { toast } from '@/components/ui/toast';
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,6 +15,7 @@ import { PRIORITIES, PRIORITY_LABEL, TASK_STATUSES, TASK_STATUS_LABEL } from '@/
 import type { Profile } from '@/lib/types';
 import { createTask, updateTask } from '@/app/actions/tasks';
 import { canManageRef, type Me, type ProjectRef } from './types';
+import { registerNewTask } from '@/components/shortcuts';
 
 export function TaskForm({ taskId, defaults, projects, people, me, onDone }: {
   taskId?: string;
@@ -53,6 +55,7 @@ export function TaskForm({ taskId, defaults, projects, people, me, onDone }: {
           Object.entries(res.fieldErrors ?? {}).forEach(([k, v]) => form.setError(k as keyof TaskInput, { message: v[0] }));
           return;
         }
+        toast(taskId ? 'Task saved' : `Task “${values.title}” created`);
         router.refresh();
         onDone?.(taskId ?? (res.data as { id: string }).id);
       }))}
@@ -98,11 +101,13 @@ export function NewTaskDialog({ projects, people, me, defaults, label = 'New tas
   projects: ProjectRef[]; people: Profile[]; me: Me; defaults?: Partial<TaskInput>; label?: string; variant?: 'default' | 'outline';
 }) {
   const managesAny = projects.some((p) => canManageRef(p, me));
+  const hasProjects = projects.length > 0;
   const [open, setOpen] = useState(false);
+  useEffect(() => (hasProjects ? registerNewTask(() => setOpen(true)) : undefined), [hasProjects]);
   if (!projects.length) return null;
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button variant={variant}><Plus /> {label}</Button></DialogTrigger>
+      <DialogTrigger asChild><Button variant={variant} title={`${label} (C)`}><Plus /> {label}</Button></DialogTrigger>
       <DialogContent className="max-w-xl">
         <DialogHeader><DialogTitle>New task</DialogTitle><DialogDescription>{managesAny ? 'Assignees must be members of the project.' : 'Add a task for yourself. Your project manager will see it in the project.'}</DialogDescription></DialogHeader>
         <TaskForm projects={projects} people={people} me={me} defaults={defaults} onDone={() => setOpen(false)} />

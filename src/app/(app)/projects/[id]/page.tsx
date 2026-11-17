@@ -143,6 +143,7 @@ export default async function ProjectPage({ params, searchParams }: {
           emptyTitle={filtersActive ? 'No tasks match these filters' : 'No tasks yet'}
           emptyDescription={filtersActive ? 'Try clearing a filter.' : manages ? 'Add tasks one by one, or draft a plan with AI and pick the ones you want.' : isMember ? 'No tasks yet. Use “Add my task” to add something you’re working on.' : 'Your project manager hasn’t added tasks yet.'}
           emptyAction={!filtersActive && manages ? <Button asChild variant="ai"><Link href={`/projects/${id}/plan`}><Sparkles /> Draft tasks with AI</Link></Button> : undefined}
+          quickAdd={manages || isMember ? { projectId: id, selfId: manages ? null : session.userId } : undefined}
         />
       </section>
 
