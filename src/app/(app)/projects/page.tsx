@@ -76,7 +76,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
           )}
         </Card>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="stagger grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {projects.map((p) => {
             const manager = p.manager_id ? peopleMap.get(p.manager_id) : null;
             const team = p.memberIds.map((id) => peopleMap.get(id)).filter((x): x is NonNullable<typeof x> => Boolean(x));
@@ -86,33 +86,32 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
             const late = left !== null && left < 0 && p.status !== 'completed';
             return (
               <li key={p.id}>
-                <Link href={`/projects/${p.id}`} className="group relative flex h-full flex-col overflow-hidden rounded-[16px] border bg-card p-5 transition-[border-color,box-shadow] hover:border-input hover:shadow-lift">
-                  <span aria-hidden className="absolute inset-x-0 top-0 h-1" style={{ background: color }} />
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-[12px] font-display text-[17px] font-semibold text-white" style={{ background: color }}>{p.name.trim()[0]?.toUpperCase()}</span>
+                <Link href={`/projects/${p.id}`} className="lift sheen glow-ring group relative flex h-full flex-col overflow-hidden rounded-lg border bg-card p-4 hover:border-primary/40">
+                                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-md text-[12px] font-semibold text-white" style={{ background: color, boxShadow: `0 0 16px -2px ${color}` }}>{p.name.trim()[0]?.toUpperCase()}</span>
                       <div className="min-w-0">
-                        <h2 className="truncate font-semibold tracking-[-0.01em] group-hover:text-primary">{p.name}</h2>
-                        <p className="truncate text-[13px] text-muted-foreground">{manager ? `Led by ${manager.full_name}` : 'No manager yet'}</p>
+                        <h2 className="truncate text-[14px] font-semibold">{p.name}</h2>
+                        <p className="truncate text-[12px] text-muted-foreground">{manager ? `Led by ${manager.full_name}` : 'No manager yet'}</p>
                       </div>
                     </div>
                     <HealthBadge health={p.health} />
                   </div>
-                  <p className="mt-3 line-clamp-2 min-h-10 text-sm text-muted-foreground">{p.description || 'No description yet.'}</p>
+                  <p className="mt-3 line-clamp-2 min-h-[38px] text-[13px] leading-[1.45] text-muted-foreground">{p.description || 'No description yet.'}</p>
                   <div className="mt-4">
-                    <div className="mb-1.5 flex items-baseline justify-between text-[13px]">
+                    <div className="mb-1.5 flex items-baseline justify-between text-[12px]">
                       <span className="text-muted-foreground">{p.stats.done} of {p.stats.total} tasks done</span>
-                      <span className="font-display text-base font-semibold tabular">{p.stats.percent}%</span>
+                      <span className="font-medium text-foreground tabular">{p.stats.percent}%</span>
                     </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full" style={{ width: `${p.stats.percent}%`, background: color }} /></div>
+                    <div className="h-1 overflow-hidden rounded-full bg-foreground/[0.08]"><div className="h-full rounded-full" style={{ width: `${p.stats.percent}%`, background: color, boxShadow: `0 0 10px ${color}` }} /></div>
                   </div>
-                  <div className="mt-auto flex items-center justify-between gap-3 pt-5">
-                    <div className="flex -space-x-2">
+                  <div className="mt-auto flex items-center justify-between gap-3 border-t pt-3 mt-4">
+                    <div className="flex -space-x-1.5">
                       {team.slice(0, 4).map((m) => <Avatar key={m.id} person={m} className="ring-2 ring-card" />)}
-                      {team.length > 4 && <span className="grid size-6 place-items-center rounded-full bg-muted text-[10px] font-medium ring-2 ring-card">+{team.length - 4}</span>}
+                      {team.length > 4 && <span className="grid size-5 place-items-center rounded-full bg-muted text-[10px] font-medium ring-2 ring-card">+{team.length - 4}</span>}
                       {team.length === 0 && <span className="text-xs text-muted-foreground">No members</span>}
                     </div>
-                    <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium', late ? 'bg-destructive-soft text-destructive' : soon ? 'bg-deadline-soft text-deadline' : 'text-muted-foreground')}>
+                    <span className={cn('inline-flex items-center gap-1.5 text-[12px] tabular', late ? 'font-medium text-destructive' : soon ? 'font-medium text-deadline' : 'text-muted-foreground')}>
                       <CalendarDays className="size-3.5" aria-hidden />
                       {p.due_date ? (late ? `${-left!}d late` : left === 0 ? 'Due today' : soon ? `${left}d left` : fmtDate(p.due_date, 'd MMM')) : 'No due date'}
                     </span>

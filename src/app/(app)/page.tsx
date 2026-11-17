@@ -50,13 +50,13 @@ export default async function OverviewPage() {
       <>
         <PageHeader title={greeting} description={today} actions={<Button asChild variant="outline"><Link href="/my-work">Open My Work</Link></Button>} />
         <WeekStrip tasks={mine} projectNames={projectNames} title="Your week" />
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="stagger mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatCard icon={ListTodo} label="Open tasks" value={open.length} />
           <StatCard icon={AlarmClock} label="Due in the next 7 days" value={dueSoon.length} tone="amber" />
           <StatCard icon={TriangleAlert} label="Overdue" value={overdue.length} tone="red" />
           <StatCard icon={CircleCheckBig} label="Completed in the last 14 days" value={doneRecently.length} />
         </div>
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
           <Card>
             <CardHeader><CardTitle>Up next</CardTitle><CardDescription>Your open tasks, soonest first</CardDescription></CardHeader>
             <CardContent>
@@ -106,7 +106,7 @@ export default async function OverviewPage() {
     <>
       <PageHeader title={greeting} description={isCeo ? `${today}. Here's the whole company.` : `${today}. Here are the projects you manage.`} />
       <WeekStrip tasks={scopedTasks} projectNames={projectNames} title={isCeo ? 'This week across the company' : 'This week on your projects'} />
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="stagger mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard icon={FolderKanban} label={isCeo ? 'Active projects' : 'Your active projects'} value={live.length} hint={needsAttention.length ? `${needsAttention.length} need attention` : 'All on track'} />
         <StatCard icon={Percent} label="Task completion" value={`${scopedTasks.length ? Math.round((done / scopedTasks.length) * 100) : 0}%`} hint={`${done} of ${scopedTasks.length} tasks done`} />
         <StatCard icon={ListTodo} label="Open tasks" value={openTasks.length} hint={unassigned ? `${unassigned} unassigned` : 'All assigned'} />
@@ -121,7 +121,7 @@ export default async function OverviewPage() {
             action={<Button asChild><Link href="/projects/new">Create a project</Link></Button>} />
         </Card>
       ) : (
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <Card className="lg:col-span-2">
             <CardHeader><CardTitle>Project health</CardTitle><CardDescription>Calculated from task status and due dates</CardDescription></CardHeader>
             <CardContent>

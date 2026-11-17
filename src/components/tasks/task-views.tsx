@@ -5,17 +5,13 @@ import { ListChecks } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { NativeSelect } from '@/components/ui/input';
 import { Alert, EmptyState } from '@/components/ui/misc';
-import { Avatar, PriorityBadge } from '@/components/badges';
+import { Avatar, PriorityIcon, StatusIcon } from '@/components/badges';
 import { cn } from '@/lib/utils';
-import { TASK_STATUSES, TASK_STATUS_LABEL, daysUntil, dueLabel, isOverdue } from '@/lib/domain';
+import { PRIORITY_LABEL, TASK_STATUSES, TASK_STATUS_LABEL, daysUntil, dueLabel, isOverdue } from '@/lib/domain';
 import { projectColor } from '@/lib/colors';
 import type { Profile, Task, TaskStatus } from '@/lib/types';
 import { updateTaskStatus } from '@/app/actions/tasks';
 import { canManageRef, type Me, type ProjectRef } from './types';
-
-const COLUMN_ACCENT: Record<TaskStatus, string> = {
-  todo: 'bg-[#94a0b8]', in_progress: 'bg-info', in_review: 'bg-warning', done: 'bg-success',
-};
 
 function useTaskState(initial: Task[]) {
   const [tasks, setTasks] = useState(initial);
@@ -62,29 +58,29 @@ export function TaskViews({ view, tasks: initial, projects, people, me, showProj
       ) : (
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-sm">
-              <thead className="border-b text-left text-[13px] text-muted-foreground">
+            <table className="w-full min-w-[760px] text-[13px]">
+              <thead className="border-b bg-muted/40 text-left text-[12px] text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Task</th>
-                  {showProject && <th className="py-2.5 font-medium">Project</th>}
-                  <th className="py-2.5 font-medium">Assignee</th>
-                  <th className="py-2.5 font-medium">Priority</th>
-                  <th className="py-2.5 font-medium">Due</th>
-                  <th className="px-4 py-2.5 font-medium">Status</th>
+                  <th className="py-2 pl-4 pr-2 font-medium">Task</th>
+                  {showProject && <th className="py-2 font-medium">Project</th>}
+                  <th className="py-2 font-medium">Assignee</th>
+                  <th className="py-2 font-medium">Priority</th>
+                  <th className="py-2 font-medium">Due</th>
+                  <th className="py-2 pl-2 pr-4 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {tasks.map((t) => {
                   const assignee = t.assignee_id ? peopleMap.get(t.assignee_id) : null;
                   return (
-                    <tr key={t.id} className="hover:bg-muted/30">
-                      <td className="px-4 py-2.5"><Link href={`/tasks/${t.id}`} className="flex items-center gap-2.5 font-medium hover:text-primary"><span aria-hidden className="size-2 shrink-0 rounded-[3px]" style={{ background: projectColor(t.project_id) }} />{t.title}</Link></td>
-                      {showProject && <td className="py-2.5 text-muted-foreground">{projectMap.get(t.project_id)?.name ?? '—'}</td>}
-                      <td className="py-2.5"><span className="flex items-center gap-2"><Avatar person={assignee} /><span className="truncate">{assignee?.full_name ?? 'Unassigned'}</span></span></td>
-                      <td className="py-2.5"><PriorityBadge priority={t.priority} /></td>
-                      <td className={cn('py-2.5 whitespace-nowrap text-muted-foreground', isOverdue(t) && 'font-medium text-destructive')}>{dueLabel(t)}</td>
-                      <td className="px-4 py-2">
-                        <NativeSelect aria-label={`Status of ${t.title}`} value={t.status} disabled={!canEdit(t)} onChange={(e) => move(t.id, e.target.value as TaskStatus)} className="h-8 w-36 text-[13px]">
+                    <tr key={t.id} className="group transition-colors hover:bg-foreground/[0.025]">
+                      <td className="py-2 pl-4 pr-2"><Link href={`/tasks/${t.id}`} className="flex items-center gap-2.5 font-medium"><StatusIcon status={t.status} /><span className="truncate group-hover:text-foreground">{t.title}</span></Link></td>
+                      {showProject && <td className="py-2 text-muted-foreground"><span className="flex items-center gap-2"><span aria-hidden className="size-2 shrink-0 rounded-[2px]" style={{ background: projectColor(t.project_id) }} /><span className="truncate">{projectMap.get(t.project_id)?.name ?? '—'}</span></span></td>}
+                      <td className="py-2"><span className="flex items-center gap-2"><Avatar person={assignee} /><span className="truncate text-foreground/85">{assignee?.full_name ?? 'Unassigned'}</span></span></td>
+                      <td className="py-2"><span className="flex items-center gap-1.5 text-foreground/85"><PriorityIcon priority={t.priority} />{PRIORITY_LABEL[t.priority]}</span></td>
+                      <td className={cn('py-2 whitespace-nowrap text-muted-foreground tabular', isOverdue(t) && 'font-medium text-destructive')}>{dueLabel(t)}</td>
+                      <td className="py-1.5 pl-2 pr-4">
+                        <NativeSelect aria-label={`Status of ${t.title}`} value={t.status} disabled={!canEdit(t)} onChange={(e) => move(t.id, e.target.value as TaskStatus)} className="h-7 w-32 border-transparent bg-transparent text-[12.5px] hover:border-border-strong hover:bg-card disabled:opacity-70">
                           {TASK_STATUSES.map((s) => <option key={s} value={s}>{TASK_STATUS_LABEL[s]}</option>)}
                         </NativeSelect>
                       </td>
@@ -107,7 +103,7 @@ function Board({ tasks, move, canEdit, projectMap, peopleMap, showProject }: {
   const [dragId, setDragId] = useState<string | null>(null);
   const [over, setOver] = useState<TaskStatus | null>(null);
   return (
-    <div className="grid gap-4 overflow-x-auto pb-2 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-3 overflow-x-auto pb-2 md:grid-cols-2 xl:grid-cols-4">
       {TASK_STATUSES.map((col) => {
         const list = tasks.filter((t) => t.status === col);
         return (
@@ -117,11 +113,11 @@ function Board({ tasks, move, canEdit, projectMap, peopleMap, showProject }: {
             onDragOver={(e) => { if (dragId) { e.preventDefault(); setOver(col); } }}
             onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(null); }}
             onDrop={() => { if (dragId) move(dragId, col); setDragId(null); setOver(null); }}
-            className={cn('min-h-48 rounded-[16px] bg-muted/60 p-2 transition-colors', over === col && 'bg-primary-soft outline-2 outline-dashed outline-primary/40')}
+            className={cn('min-h-48 rounded-lg border border-transparent bg-foreground/[0.02] p-1.5 transition-colors', over === col && 'border-primary/40 bg-primary-soft')}
           >
-            <h3 className="flex items-center gap-2 px-2 pb-2.5 pt-1 text-sm font-semibold">
-              <span className={cn('size-2 rounded-full', COLUMN_ACCENT[col])} aria-hidden />{TASK_STATUS_LABEL[col]}
-              <span className="ml-auto rounded-full bg-card px-2 py-0.5 text-xs font-medium text-muted-foreground tabular">{list.length}</span>
+            <h3 className="flex items-center gap-2 px-2 pb-2 pt-1.5 text-[13px] font-medium">
+              <StatusIcon status={col} />{TASK_STATUS_LABEL[col]}
+              <span className="text-[12px] font-normal text-muted-foreground tabular">{list.length}</span>
             </h3>
             <ul className="space-y-2">
               {list.map((t) => {
@@ -133,12 +129,12 @@ function Board({ tasks, move, canEdit, projectMap, peopleMap, showProject }: {
                     draggable={editable}
                     onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; setDragId(t.id); }}
                     onDragEnd={() => { setDragId(null); setOver(null); }}
-                    className={cn('rounded-[12px] border bg-card p-3 shadow-lift transition-transform', editable && 'cursor-grab active:cursor-grabbing active:rotate-1', dragId === t.id && 'opacity-40')}
+                    className={cn('lift sheen glow-ring rounded-md border border-border-strong/70 bg-card p-2.5 hover:border-primary/40', editable && 'cursor-grab active:cursor-grabbing', dragId === t.id && 'opacity-40')}
                   >
-                    {showProject && <p className="mb-1.5 flex items-center gap-1.5 truncate text-xs text-muted-foreground"><span aria-hidden className="size-2 rounded-[3px]" style={{ background: projectColor(t.project_id) }} />{projectMap.get(t.project_id)?.name}</p>}
-                    <Link href={`/tasks/${t.id}`} className="block text-sm font-medium leading-snug hover:text-primary">{t.title}</Link>
-                    <div className="mt-2.5 flex items-center gap-2 text-xs">
-                      <PriorityBadge priority={t.priority} />
+                    {showProject && <p className="mb-1 flex items-center gap-1.5 truncate text-[12px] text-muted-foreground"><span aria-hidden className="size-2 rounded-[2px]" style={{ background: projectColor(t.project_id) }} />{projectMap.get(t.project_id)?.name}</p>}
+                    <Link href={`/tasks/${t.id}`} className="block text-[13px] font-medium leading-snug">{t.title}</Link>
+                    <div className="mt-2 flex items-center gap-2 text-[12px]">
+                      <PriorityIcon priority={t.priority} />
                       <span className={cn('text-muted-foreground', isOverdue(t) && 'font-medium text-destructive', !isOverdue(t) && t.status !== 'done' && t.due_date && daysUntil(t.due_date) <= 2 && 'font-medium text-deadline')}>{dueLabel(t)}</span>
                       <Avatar person={assignee} className="ml-auto" />
                     </div>
