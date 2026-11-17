@@ -81,7 +81,7 @@ export default async function OverviewPage() {
                       <tr key={p.id} className="hover:bg-foreground/[0.02]">
                         <td className="py-2.5 pl-4"><Link href={`/projects/${p.id}`} className="font-medium hover:underline">{p.name}</Link><span className="block text-[12px] text-muted-foreground">{d.client_name}</span></td>
                         <td className="py-2.5"><ProjectStatusBadge status={p.status} /></td>
-                        <td className="w-40 py-2.5"><div className="flex items-center gap-2"><Progress value={p.stats.percent} /><span className="text-[12px] tabular">{p.stats.percent}%</span></div></td>
+                        <td className="w-48 py-2.5 pr-6"><div className="flex items-center gap-2"><Progress value={p.stats.percent} /><span className="w-9 shrink-0 text-right text-[12px] tabular">{p.stats.percent}%</span></div></td>
                         <td className="py-2.5 tabular">{fmtDate(d.client_deadline ?? p.due_date, 'd MMM yyyy')}</td>
                         <td className="py-2.5 text-right font-medium tabular">{fmtMoney(d.contract_amount, d.currency)}</td>
                         <td className="py-2.5 pl-4 pr-4"><Badge tone={PAYMENT_TONE[d.payment_status]} dot>{PAYMENT_STATUS_LABEL[d.payment_status]}</Badge></td>
