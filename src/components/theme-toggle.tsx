@@ -14,7 +14,7 @@ export function ThemeToggle({ className }: { className?: string }) {
   };
   return (
     <button type="button" onClick={toggle} aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'} title={dark ? 'Light mode' : 'Dark mode'}
-      className={cn('grid size-9 place-items-center rounded-[10px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground', className)}>
+      className={cn('grid size-8 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground', className)}>
       {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
     </button>
   );

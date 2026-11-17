@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import { APP_NAME } from '@/lib/utils';
 import './globals.css';
@@ -10,15 +9,15 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [{ media: '(prefers-color-scheme: light)', color: '#f4f6fa' }, { media: '(prefers-color-scheme: dark)', color: '#0b1122' }],
+  themeColor: [{ media: '(prefers-color-scheme: light)', color: '#f4f4f6' }, { media: '(prefers-color-scheme: dark)', color: '#0a0a0c' }],
 };
 
-// Applies the saved theme before first paint, so there is no light/dark flash.
-const themeScript = `try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}`;
+// Dark is the default look; a saved choice wins. Runs before first paint, so there is no flash.
+const themeScript = `try{if(localStorage.getItem('theme')!=='light')document.documentElement.classList.add('dark')}catch(e){document.documentElement.classList.add('dark')}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={GeistMono.variable} suppressHydrationWarning>
       <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
       <body className="font-sans">{children}</body>
     </html>

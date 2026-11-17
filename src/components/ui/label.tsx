@@ -7,7 +7,7 @@ export const Label = React.forwardRef<
   React.ComponentRef<typeof LabelPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
 >(({ className, ...props }, ref) => (
-  <LabelPrimitive.Root ref={ref} className={cn('text-sm font-medium leading-none', className)} {...props} />
+  <LabelPrimitive.Root ref={ref} className={cn('text-[12.5px] font-medium leading-none text-foreground/90', className)} {...props} />
 ));
 Label.displayName = 'Label';
 
@@ -21,9 +21,9 @@ export function FormField({
       <Label htmlFor={id}>{label}</Label>
       {React.cloneElement(children, { id, 'aria-invalid': error ? true : undefined, 'aria-describedby': describedBy })}
       {error ? (
-        <p id={`${id}-error`} className="text-[13px] text-destructive">{error}</p>
+        <p id={`${id}-error`} className="text-[12px] text-destructive">{error}</p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="text-[13px] text-muted-foreground">{hint}</p>
+        <p id={`${id}-hint`} className="text-[12px] text-muted-foreground">{hint}</p>
       ) : null}
     </div>
   );

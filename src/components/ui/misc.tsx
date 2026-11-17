@@ -17,7 +17,7 @@ export function Alert({ tone = 'info', title, children, className }: {
     warning: 'border-transparent bg-warning-soft text-warning',
   }[tone];
   return (
-    <div role={tone === 'error' ? 'alert' : 'status'} className={cn('flex gap-3 rounded-[12px] border px-4 py-3 text-sm', styles, className)}>
+    <div role={tone === 'error' ? 'alert' : 'status'} className={cn('flex gap-2.5 rounded-lg border px-3.5 py-2.5 text-[13px]', styles, className)}>
       <Icon className="mt-0.5 size-4 shrink-0" aria-hidden />
       <div className="space-y-1">
         {title && <p className="font-medium">{title}</p>}
@@ -32,9 +32,9 @@ export function EmptyState({ icon: Icon, title, description, action, className }
 }) {
   return (
     <div className={cn('flex flex-col items-center justify-center gap-2 px-6 py-12 text-center', className)}>
-      {Icon && <div className="mb-2 grid size-11 place-items-center rounded-[12px] bg-primary-soft text-primary"><Icon className="size-5" /></div>}
-      <p className="font-medium">{title}</p>
-      {description && <p className="max-w-sm text-sm text-muted-foreground">{description}</p>}
+      {Icon && <div className="mb-2 grid size-10 place-items-center rounded-lg border border-border-strong bg-muted text-muted-foreground"><Icon className="size-[18px]" /></div>}
+      <p className="text-[14px] font-medium">{title}</p>
+      {description && <p className="max-w-sm text-[13px] text-muted-foreground">{description}</p>}
       {action && <div className="mt-3">{action}</div>}
     </div>
   );
@@ -44,7 +44,7 @@ export function Progress({ value, className, tone = 'primary' }: { value: number
   const bar = { primary: 'bg-primary', success: 'bg-success', warning: 'bg-warning', destructive: 'bg-destructive' }[tone];
   const v = Math.max(0, Math.min(100, Math.round(value)));
   return (
-    <div className={cn('h-1.5 w-full overflow-hidden rounded-full bg-muted', className)} role="progressbar" aria-valuenow={v} aria-valuemin={0} aria-valuemax={100}>
+    <div className={cn('h-1 w-full overflow-hidden rounded-full bg-foreground/[0.08]', className)} role="progressbar" aria-valuenow={v} aria-valuemin={0} aria-valuemax={100}>
       <div className={cn('h-full rounded-full transition-[width]', bar)} style={{ width: `${v}%` }} />
     </div>
   );

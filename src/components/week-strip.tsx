@@ -23,18 +23,18 @@ export function WeekStrip({ tasks, projectNames, title }: {
   const weekTotal = days.reduce((n, d) => n + dueOn(d).filter((t) => t.status !== 'done').length, 0);
 
   return (
-    <section aria-labelledby="week-h" className="overflow-hidden rounded-[18px] border bg-card">
-      <div className="flex flex-wrap items-baseline justify-between gap-2 px-5 pt-4">
-        <h2 id="week-h" className="font-display text-lg font-semibold tracking-[-0.015em]">{title}</h2>
-        <p className="text-[13px] text-muted-foreground">
+    <section aria-labelledby="week-h" className="overflow-hidden rounded-lg border bg-card">
+      <div className="flex flex-wrap items-baseline justify-between gap-2 px-4 pt-3.5">
+        <h2 id="week-h" className="text-[13px] font-semibold">{title}</h2>
+        <p className="text-[12.5px] text-muted-foreground">
           {weekTotal} due this week{overdue.length ? <>, <span className="font-medium text-destructive">{overdue.length} overdue</span></> : null}
         </p>
       </div>
       <div className="mt-3 grid grid-cols-1 border-t md:grid-cols-[minmax(180px,1.1fr)_repeat(7,minmax(0,1fr))]">
         {/* Overdue column */}
-        <div className="border-b bg-destructive-soft/50 p-3 md:border-b-0 md:border-r">
-          <p className="text-xs font-medium text-destructive">Overdue</p>
-          <p className="font-display text-[34px] font-semibold leading-none tracking-[-0.03em] text-destructive tabular">{overdue.length}</p>
+        <div className="border-b p-3 md:border-b-0 md:border-r">
+          <p className="text-[12px] font-medium text-destructive">Overdue</p>
+          <p className={cn('mt-1 text-[26px] font-semibold leading-none tracking-[-0.03em] tabular', overdue.length ? 'text-destructive' : 'text-muted-foreground')}>{overdue.length}</p>
           <ul className="mt-2 space-y-1">
             {overdue.slice(0, 3).map((t) => (
               <li key={t.id}><Link href={`/tasks/${t.id}`} className="block truncate text-[13px] text-foreground/85 hover:underline">{t.title}</Link></li>
@@ -49,17 +49,17 @@ export function WeekStrip({ tasks, projectNames, title }: {
           const off = isOffDay(d);
           return (
             <div key={d.toISOString()}
-              className={cn('min-h-36 border-b p-3 md:border-b-0 md:border-r last:border-r-0', off && 'bg-[repeating-linear-gradient(135deg,transparent_0_7px,var(--muted)_7px_8px)]', isToday && 'bg-primary-soft/60')}>
+              className={cn('min-h-36 border-b p-3 md:border-b-0 md:border-r last:border-r-0', off && 'bg-[repeating-linear-gradient(135deg,transparent_0_6px,var(--border)_6px_7px)]', isToday && 'bg-primary-soft')}>
               <div className="flex items-baseline justify-between">
                 <span className={cn('text-xs font-medium', isToday ? 'text-primary' : 'text-muted-foreground')}>{isToday ? 'Today' : format(d, 'EEE')}</span>
                 {off && <span className="text-[11px] text-muted-foreground">Off</span>}
               </div>
-              <p className={cn('font-display text-[26px] font-semibold leading-tight tracking-[-0.03em] tabular', isToday ? 'text-primary' : off ? 'text-muted-foreground/60' : '')}>{format(d, 'd')}</p>
+              <p className={cn('text-[22px] font-semibold leading-tight tracking-[-0.03em] tabular', isToday ? 'text-primary' : off ? 'text-muted-foreground/60' : '')}>{format(d, 'd')}</p>
               <ul className="mt-1.5 space-y-1">
                 {due.slice(0, 3).map((t) => (
                   <li key={t.id}>
                     <Link href={`/tasks/${t.id}`} title={`${t.title} — ${projectNames.get(t.project_id) ?? ''}`}
-                      className={cn('flex items-center gap-1.5 rounded-[6px] px-1.5 py-1 text-[12px] leading-tight hover:bg-muted', t.status === 'done' && 'text-muted-foreground line-through')}>
+                      className={cn('flex items-center gap-1.5 rounded-[4px] px-1.5 py-1 text-[12px] leading-tight hover:bg-foreground/[0.05]', t.status === 'done' && 'text-muted-foreground line-through')}>
                       <span aria-hidden className="size-1.5 shrink-0 rounded-full" style={{ background: projectColor(t.project_id) }} />
                       <span className="truncate">{t.title}</span>
                     </Link>
