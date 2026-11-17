@@ -141,6 +141,25 @@ async function main() {
   await expectDenied('member cannot unassign their own task', () => as('emp1', `update public.tasks set assignee_id = null where id = '${own.id}' returning id`));
   await expectOk('PM can edit a member-created task', () => as('pm1', `update public.tasks set priority = 'low' where id = '${own.id}' returning id`));
   await expectOk('member deletes their own task', () => as('emp1', `delete from public.tasks where id = '${own.id}' returning id`));
+
+  // Time tracking
+  const [run] = await as('emp1', `insert into public.time_entries (project_id, task_id, started_at, profile_id) values ('${P}', '${T}', now() - interval '90 minutes', '${U.pm1}') returning id, profile_id, minutes`);
+  check('member starts a timer; owner cannot be forged', run?.profile_id === U.emp1 && run.minutes === null);
+  await expectDenied('only one running timer per person', () => as('emp1', `insert into public.time_entries (project_id, started_at) values ('${P}', now()) returning id`));
+  const [stopped] = await as('emp1', `update public.time_entries set ended_at = now() where id = '${run.id}' returning minutes`);
+  check('stopping a timer computes the minutes', stopped?.minutes >= 89 && stopped?.minutes <= 91, String(stopped?.minutes));
+  const [manual] = await as('emp1', `insert into public.time_entries (project_id, minutes, entry_date, note) values ('${P}', 45, '2026-11-10', 'Design review') returning id`);
+  check('member logs time manually', !!manual);
+  await expectDenied('non-member cannot log time on the project', () => as('emp2', `insert into public.time_entries (project_id, minutes) values ('${P}', 30) returning id`));
+  await expectDenied('time cannot point at a task from another project', () => as('pm2', `insert into public.time_entries (project_id, task_id, minutes) values ('${ceoProj.id}', '${T}', 30) returning id`));
+  check('project manager sees the member\'s time', (await as('pm1', `select id from public.time_entries where project_id = '${P}'`)).length === 2);
+  check('non-member sees no time', (await as('emp2', `select id from public.time_entries where project_id = '${P}'`)).length === 0);
+  check('another organization sees no time', (await as('ceoB', `select id from public.time_entries`)).length === 0);
+  await expectDenied('PM cannot edit someone else\'s time', () => as('pm1', `update public.time_entries set minutes = 999 where id = '${manual.id}' returning id`));
+  await expectDenied('time cannot be moved to another person', () => as('emp1', `update public.time_entries set profile_id = '${U.pm1}' where id = '${manual.id}' returning id`));
+  await expectOk('member edits their own entry', () => as('emp1', `update public.time_entries set note = 'Design review (client)' where id = '${manual.id}' returning id`));
+  await expectOk('PM deletes an entry on their project', () => as('pm1', `delete from public.time_entries where id = '${manual.id}' returning id`));
+  await expectDenied('non-member cannot delete time', () => as('emp2', `delete from public.time_entries where id = '${run.id}' returning id`));
   await expectOk('assignee updates task status', () => as('emp1', `update public.tasks set status = 'in_progress' where id = '${T}'`));
   await expectOk('assignee updates task description', () => as('emp1', `update public.tasks set description = 'notes' where id = '${T}'`));
   await expectDenied('assignee cannot change the due date', () => as('emp1', `update public.tasks set due_date = '2030-01-01' where id = '${T}' returning id`));

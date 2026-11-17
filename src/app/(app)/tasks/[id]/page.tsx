@@ -9,6 +9,8 @@ import { DescriptionEditor, EditTaskDialog, StatusControl, TaskProperties, Title
 import { isOwnTask } from '@/components/tasks/types';
 import { DeleteTaskButton } from '@/components/delete-buttons';
 import { TaskAssistant } from '@/components/ai/task-assistant';
+import { TaskTimeBox } from '@/components/time/time-tracker';
+import type { RunningTimer } from '@/lib/types';
 import { CommentComposer } from '@/components/ai/comment-composer';
 import { requireSession } from '@/lib/session';
 import { byId, canManage, db, getTaskDetail, listProfiles } from '@/lib/queries';
@@ -26,10 +28,14 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   const detail = await getTaskDetail(supabase, id);
   if (!detail) notFound();
   const { task, project, comments, activity } = detail;
-  const [people, { data: members }] = await Promise.all([
+  const [people, { data: members }, { data: taskTime }, { data: myRun }] = await Promise.all([
     listProfiles(supabase),
     supabase.from('project_members').select('profile_id').eq('project_id', project.id),
+    supabase.from('time_entries').select('minutes').eq('task_id', id).not('minutes', 'is', null),
+    supabase.from('time_entries').select('id, project_id, task_id, started_at').eq('profile_id', session.userId).is('minutes', null).is('ended_at', null).maybeSingle(),
   ]);
+  const taskMinutes = (taskTime ?? []).reduce((n, e) => n + (e.minutes ?? 0), 0);
+  const myTimer = myRun ? { ...myRun, project_name: project.name, task_title: task.title } as RunningTimer : null;
   const peopleMap = byId(people);
   const manages = canManage(project, session.profile);
   const isAssignee = task.assignee_id === session.userId;
@@ -103,6 +109,10 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
                 canAssign={manages}
               />
               {isOverdue(task) && <p className="rounded-md bg-destructive-soft px-2.5 py-1.5 text-[12.5px] font-medium text-destructive">{dueLabel(task)}</p>}
+              <div className="border-t pt-4">
+                <TaskTimeBox projectId={project.id} taskId={task.id} minutes={taskMinutes} timer={myTimer}
+                  canLog={manages || (members ?? []).some((m) => m.profile_id === session.userId) || session.profile.role === 'ceo'} />
+              </div>
               <dl className="space-y-3 border-t pt-4">
                 <div><dt className="text-xs text-muted-foreground">Created by</dt><dd className="mt-1">{creator?.full_name ?? '—'} · {fmtDate(task.created_at.slice(0, 10))}</dd></div>
                 {task.completed_at && <div><dt className="text-xs text-muted-foreground">Completed</dt><dd className="mt-1">{fmtDate(task.completed_at.slice(0, 10))}</dd></div>}
