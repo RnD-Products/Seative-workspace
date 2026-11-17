@@ -10,6 +10,8 @@ import { ActivityFeed } from '@/components/work-items';
 import { TaskFilters } from '@/components/tasks/task-filters';
 import { TaskViews } from '@/components/tasks/task-views';
 import { NewTaskDialog } from '@/components/tasks/task-form';
+import { TimeTracker, type TimeRow } from '@/components/time/time-tracker';
+import { format, startOfWeek } from 'date-fns';
 import { ProgressSummaryCard } from '@/components/ai/progress-summary-card';
 import { RiskSignalsCard } from '@/components/ai/risk-signals-card';
 import { requireSession } from '@/lib/session';
@@ -34,10 +36,26 @@ export default async function ProjectPage({ params, searchParams }: {
   const detail = await getProjectDetail(supabase, id);
   if (!detail) notFound(); // also covers "exists but you can't see it" — RLS hides it
   const { project, memberIds, activity, stats, health } = detail;
-  const [people, filteredTasks] = await Promise.all([
+  const [people, filteredTasks, { data: timeData }, { data: myRun }] = await Promise.all([
     listProfiles(supabase),
     listTasks(supabase, session.userId, { ...parseFilters(sp), project: id }),
+    supabase.from('time_entries').select('id, task_id, profile_id, entry_date, minutes, note')
+      .eq('project_id', id).not('minutes', 'is', null)
+      .order('entry_date', { ascending: false }).order('created_at', { ascending: false }).limit(1000),
+    supabase.from('time_entries').select('id, project_id, task_id, started_at, projects(name), tasks(title)')
+      .eq('profile_id', session.userId).is('minutes', null).is('ended_at', null).maybeSingle(),
   ]);
+  const timeRows = (timeData ?? []) as TimeRow[];
+  const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 0 }), 'yyyy-MM-dd');
+  const byPerson = new Map<string, number>();
+  for (const e of timeRows) byPerson.set(e.profile_id, (byPerson.get(e.profile_id) ?? 0) + e.minutes);
+  const timeTotals = {
+    total: timeRows.reduce((n, e) => n + e.minutes, 0),
+    week: timeRows.filter((e) => e.entry_date >= weekStart).reduce((n, e) => n + e.minutes, 0),
+    byPerson: [...byPerson].map(([pid, minutes]) => ({ id: pid, minutes })).sort((a, b) => b.minutes - a.minutes),
+  };
+  const run = myRun as unknown as { id: string; project_id: string; task_id: string | null; started_at: string; projects: { name: string } | null; tasks: { title: string } | null } | null;
+  const myTimer = run ? { id: run.id, project_id: run.project_id, task_id: run.task_id, started_at: run.started_at, project_name: run.projects?.name ?? 'Project', task_title: run.tasks?.title ?? null } : null;
   const peopleMap = byId(people);
   const manages = canManage(project, session.profile);
   const isMember = memberIds.includes(session.userId);
@@ -144,6 +162,20 @@ export default async function ProjectPage({ params, searchParams }: {
           emptyDescription={filtersActive ? 'Try clearing a filter.' : manages ? 'Add tasks one by one, or draft a plan with AI and pick the ones you want.' : isMember ? 'No tasks yet. Use “Add my task” to add something you’re working on.' : 'Your project manager hasn’t added tasks yet.'}
           emptyAction={!filtersActive && manages ? <Button asChild variant="ai"><Link href={`/projects/${id}/plan`}><Sparkles /> Draft tasks with AI</Link></Button> : undefined}
           quickAdd={manages || isMember ? { projectId: id, selfId: manages ? null : session.userId } : undefined}
+        />
+      </section>
+
+      <section className="mt-8" id="time">
+        <TimeTracker
+          projectId={id}
+          tasks={detail.tasks.filter((t) => t.status !== 'done' || timeRows.some((e) => e.task_id === t.id)).map((t) => ({ id: t.id, title: t.title }))}
+          people={people.map((p) => ({ id: p.id, full_name: p.full_name }))}
+          entries={timeRows}
+          totals={timeTotals}
+          timer={myTimer}
+          canLog={manages || memberIds.includes(session.userId) || session.profile.role === 'ceo'}
+          canDeleteAll={manages}
+          meId={session.userId}
         />
       </section>
 

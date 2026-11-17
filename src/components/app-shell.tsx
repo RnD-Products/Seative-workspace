@@ -7,7 +7,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { FolderKanban, Keyboard, LayoutDashboard, ListChecks, LogOut, Menu, Plus, Search, Settings, Sparkles, Users, X } from 'lucide-react';
 import { cn, APP_NAME } from '@/lib/utils';
 import { ROLE_LABEL } from '@/lib/domain';
-import type { Role } from '@/lib/types';
+import type { Role, RunningTimer } from '@/lib/types';
+import { RunningTimerPill } from './time/running-timer';
 import { Avatar } from './badges';
 import { ThemeToggle } from './theme-toggle';
 import { CommandPalette, type PaletteProject } from './command-palette';
@@ -22,8 +23,8 @@ const NAV = [
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
-export function AppShell({ user, orgName, projects, canCreate, children }: {
-  user: { id: string; full_name: string; role: Role }; orgName: string; projects: PaletteProject[]; canCreate: boolean; children: React.ReactNode;
+export function AppShell({ user, orgName, projects, canCreate, timer, children }: {
+  user: { id: string; full_name: string; role: Role }; orgName: string; projects: PaletteProject[]; canCreate: boolean; timer: RunningTimer | null; children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -97,6 +98,8 @@ export function AppShell({ user, orgName, projects, canCreate, children }: {
         </div>
       ) : <div className="flex-1" />}
 
+      {timer && <RunningTimerPill timer={timer} />}
+
       <div className="flex items-center gap-2 rounded-md px-1.5 py-1">
         <Avatar person={user} size="sm" />
         <div className="min-w-0 flex-1 leading-tight">
@@ -141,6 +144,7 @@ export function AppShell({ user, orgName, projects, canCreate, children }: {
             <span aria-hidden className="grid size-5 place-items-center rounded-[5px] bg-primary text-[11px] font-bold text-white">S</span>{APP_NAME}
           </span>
           <div className="ml-auto flex items-center gap-1">
+            {timer && <RunningTimerPill timer={timer} compact />}
             <button onClick={() => setPalette(true)} className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted" aria-label="Search"><Search className="size-4" /></button>
             {canCreate && <Button asChild size="icon" variant="ghost"><Link href="/projects/new" aria-label="New project"><Plus /></Link></Button>}
           </div>

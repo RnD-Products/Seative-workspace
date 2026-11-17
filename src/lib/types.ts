@@ -87,3 +87,26 @@ export interface Artifact<T = unknown> {
 export type ActionResult<T = undefined> =
   | { ok: true; data?: T; message?: string }
   | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
+
+export interface TimeEntry {
+  id: string;
+  organization_id: string;
+  project_id: string;
+  task_id: string | null;
+  profile_id: string;
+  entry_date: string;
+  started_at: string | null;
+  ended_at: string | null;
+  minutes: number | null;
+  note: string;
+  created_at: string;
+}
+
+export interface RunningTimer {
+  id: string;
+  project_id: string;
+  project_name: string;
+  task_id: string | null;
+  task_title: string | null;
+  started_at: string;
+}
