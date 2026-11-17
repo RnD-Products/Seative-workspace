@@ -1,4 +1,5 @@
 import 'server-only';
+import type { Blocker } from './blockers';
 import { createClient } from '@/lib/supabase/server';
 import type { Activity, Comment, Priority, Profile, Project, Task, TaskStatus } from '@/lib/types';
 import { addDays, format } from 'date-fns';
@@ -27,6 +28,7 @@ export interface ProjectWithStats extends Project {
   stats: ProjectStats;
   health: Health;
   memberIds: string[];
+  openBlockers?: number;
 }
 
 export async function listProjects(supabase: Supabase): Promise<ProjectWithStats[]> {
@@ -37,6 +39,8 @@ export async function listProjects(supabase: Supabase): Promise<ProjectWithStats
     // Salespeople cannot read tasks; this gives them progress counts for their own deals.
     supabase.rpc('deal_task_rows'),
   ]);
+  const { data: openBlockers } = await supabase.from('blockers').select('project_id, created_at').eq('status', 'open');
+  const staleCut = Date.now() - 3 * 864e5;
   if (error) throw new Error(error.message);
   return ((projects ?? []) as Project[]).map((p) => {
     let ts = (tasks ?? []).filter((t) => t.project_id === p.id) as Pick<Task, 'status' | 'due_date'>[];
@@ -45,7 +49,8 @@ export async function listProjects(supabase: Supabase): Promise<ProjectWithStats
     return {
       ...p,
       stats,
-      health: projectHealth(p, stats),
+      health: projectHealth(p, stats, (openBlockers ?? []).filter((x) => x.project_id === p.id && Date.parse(x.created_at) < staleCut).length),
+      openBlockers: (openBlockers ?? []).filter((x) => x.project_id === p.id).length,
       memberIds: (members ?? []).filter((m) => m.project_id === p.id).map((m) => m.profile_id as string),
     };
   });
@@ -59,11 +64,14 @@ export async function getProject(supabase: Supabase, id: string) {
 export async function getProjectDetail(supabase: Supabase, id: string) {
   const project = await getProject(supabase, id);
   if (!project) return null;
-  const [{ data: tasks }, { data: members }, { data: activity }] = await Promise.all([
+  const [{ data: tasks }, { data: members }, { data: activity }, { data: blockers }] = await Promise.all([
     supabase.from('tasks').select('*').eq('project_id', id).order('position'),
     supabase.from('project_members').select('profile_id').eq('project_id', id),
-    supabase.from('activity_log').select('*').eq('project_id', id).order('created_at', { ascending: false }).limit(40),
+    supabase.from('activity_log').select('*').eq('project_id', id).order('created_at', { ascending: false }).limit(12),
+    supabase.from('blockers').select('*').eq('project_id', id).order('status').order('created_at', { ascending: false }),
   ]);
+  const bl = (blockers ?? []) as Blocker[];
+  const stale = bl.filter((b) => b.status === 'open' && Date.parse(b.created_at) < Date.now() - 3 * 864e5).length;
   const t = (tasks ?? []) as Task[];
   const stats = projectStats(t);
   return {
@@ -71,8 +79,9 @@ export async function getProjectDetail(supabase: Supabase, id: string) {
     tasks: t,
     memberIds: (members ?? []).map((m) => m.profile_id as string),
     activity: (activity ?? []) as Activity[],
+    blockers: bl,
     stats,
-    health: projectHealth(project, stats),
+    health: projectHealth(project, stats, stale),
   };
 }
 

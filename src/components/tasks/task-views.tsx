@@ -39,7 +39,7 @@ function useTaskState(initial: Task[]) {
   return { tasks, move, error };
 }
 
-export function TaskViews({ view, tasks: initial, projects, people, me, showProject = true, emptyTitle, emptyDescription, emptyAction, quickAdd }: {
+export function TaskViews({ view, tasks: initial, projects, people, me, showProject = true, emptyTitle, emptyDescription, emptyAction, quickAdd, blockedTaskIds = [] }: {
   view: 'list' | 'board';
   tasks: Task[];
   projects: ProjectRef[];
@@ -51,7 +51,10 @@ export function TaskViews({ view, tasks: initial, projects, people, me, showProj
   emptyAction?: React.ReactNode;
   /** When set, an inline "add a task" row appears (project pages). */
   quickAdd?: QuickAddConfig;
+  /** Tasks with an open blocker get a "Blocked" label. */
+  blockedTaskIds?: string[];
 }) {
+  const blocked = new Set(blockedTaskIds);
   const { tasks, move, error } = useTaskState(initial);
   const projectMap = new Map(projects.map((p) => [p.id, p]));
   const peopleMap = new Map(people.map((p) => [p.id, p]));
@@ -70,7 +73,7 @@ export function TaskViews({ view, tasks: initial, projects, people, me, showProj
     <div className="space-y-3">
       {error && <Alert tone="error">{error}</Alert>}
       {view === 'board' ? (
-        <Board tasks={tasks} move={move} canEdit={canEdit} projectMap={projectMap} peopleMap={peopleMap} showProject={showProject} quickAdd={quickAdd} />
+        <Board tasks={tasks} move={move} canEdit={canEdit} projectMap={projectMap} peopleMap={peopleMap} showProject={showProject} quickAdd={quickAdd} blocked={blocked} />
       ) : (
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
@@ -90,7 +93,7 @@ export function TaskViews({ view, tasks: initial, projects, people, me, showProj
                   const assignee = t.assignee_id ? peopleMap.get(t.assignee_id) : null;
                   return (
                     <tr key={t.id} className="group transition-colors hover:bg-foreground/[0.025]">
-                      <td className="py-2 pl-4 pr-2"><span className="flex items-center gap-2.5"><DoneToggle task={t} editable={canEdit(t)} move={move} /><Link href={`/tasks/${t.id}`} className="truncate font-medium group-hover:text-foreground">{t.title}</Link></span></td>
+                      <td className="py-2 pl-4 pr-2"><span className="flex items-center gap-2.5"><DoneToggle task={t} editable={canEdit(t)} move={move} /><Link href={`/tasks/${t.id}`} className="truncate font-medium group-hover:text-foreground">{t.title}</Link>{blocked.has(t.id) && <BlockedLabel />}</span></td>
                       {showProject && <td className="py-2 text-muted-foreground"><span className="flex items-center gap-2"><span aria-hidden className="size-2 shrink-0 rounded-[2px]" style={{ background: projectColor(t.project_id) }} /><span className="truncate">{projectMap.get(t.project_id)?.name ?? '—'}</span></span></td>}
                       <td className="py-2"><span className="flex items-center gap-2"><Avatar person={assignee} /><span className="truncate text-foreground/85">{assignee?.full_name ?? 'Unassigned'}</span></span></td>
                       <td className="py-2"><span className="flex items-center gap-1.5 text-foreground/85"><PriorityIcon priority={t.priority} />{PRIORITY_LABEL[t.priority]}</span></td>
@@ -113,9 +116,9 @@ export function TaskViews({ view, tasks: initial, projects, people, me, showProj
   );
 }
 
-function Board({ tasks, move, canEdit, projectMap, peopleMap, showProject, quickAdd }: {
+function Board({ tasks, move, canEdit, projectMap, peopleMap, showProject, quickAdd, blocked }: {
   tasks: Task[]; move: (id: string, s: TaskStatus) => void; canEdit: (t: Task) => boolean;
-  projectMap: Map<string, ProjectRef>; peopleMap: Map<string, Profile>; showProject: boolean; quickAdd?: QuickAddConfig;
+  projectMap: Map<string, ProjectRef>; peopleMap: Map<string, Profile>; showProject: boolean; quickAdd?: QuickAddConfig; blocked: Set<string>;
 }) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [over, setOver] = useState<TaskStatus | null>(null);
@@ -150,6 +153,7 @@ function Board({ tasks, move, canEdit, projectMap, peopleMap, showProject, quick
                   >
                     {showProject && <p className="mb-1 flex items-center gap-1.5 truncate text-[12px] text-muted-foreground"><span aria-hidden className="size-2 rounded-[2px]" style={{ background: projectColor(t.project_id) }} />{projectMap.get(t.project_id)?.name}</p>}
                     <Link href={`/tasks/${t.id}`} className="block text-[13px] font-medium leading-snug">{t.title}</Link>
+                    {blocked.has(t.id) && <div className="mt-1.5"><BlockedLabel /></div>}
                     <div className="mt-2 flex items-center gap-2 text-[12px]">
                       <PriorityIcon priority={t.priority} />
                       <span className={cn('text-muted-foreground', isOverdue(t) && 'font-medium text-destructive', !isOverdue(t) && t.status !== 'done' && t.due_date && daysUntil(t.due_date) <= 2 && 'font-medium text-deadline')}>{dueLabel(t)}</span>
@@ -189,4 +193,8 @@ function DoneToggle({ task, editable, move }: { task: Task; editable: boolean; m
       {!done && <StatusIcon status="done" className="absolute opacity-0 transition-opacity group-hover/done:opacity-60" />}
     </button>
   );
+}
+
+function BlockedLabel() {
+  return <span className="inline-flex h-5 shrink-0 items-center gap-1 rounded-full border border-destructive/30 bg-destructive-soft px-1.5 text-[11px] font-medium text-destructive"><span className="size-1.5 rounded-full bg-destructive" aria-hidden />Blocked</span>;
 }

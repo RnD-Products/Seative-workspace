@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { AlarmClock, BadgeDollarSign, CheckCircle2, Plus, CircleCheckBig, FolderKanban, Inbox, ListTodo, Percent, TriangleAlert } from 'lucide-react';
+import { AlarmClock, BadgeDollarSign, OctagonAlert, CheckCircle2, Plus, CircleCheckBig, FolderKanban, Inbox, ListTodo, Percent, TriangleAlert } from 'lucide-react';
 import { WeekStrip } from '@/components/week-strip';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { HealthBadge, Avatar, ProjectStatusBadge } from '@/components/badges';
 import { Badge } from '@/components/ui/badge';
 import { PAYMENT_STATUS_LABEL, PAYMENT_TONE, fmtMoney, outstanding, type ProjectSales } from '@/lib/sales';
 import { format } from 'date-fns';
+import { SIDE_LABEL } from '@/lib/blockers';
 import { ActivityFeed, StatCard, TaskRow } from '@/components/work-items';
 import { CategoryBars, WorkloadBars } from '@/components/charts';
 import { OrgSummaryCard } from '@/components/ai/org-summary-card';
@@ -136,6 +137,9 @@ export default async function OverviewPage() {
   // ---------------- PM & CEO ----------------
   const isCeo = profile.role === 'ceo';
   const scoped = isCeo ? projects : projects.filter((p) => p.manager_id === profile.id);
+  const { data: blockerData } = await supabase.from('blockers').select('project_id, side').eq('status', 'open');
+  const scopedSet = new Set(scoped.map((p) => p.id));
+  const openBlockerRows = ((blockerData ?? []) as { project_id: string; side: 'client' | 'internal' | 'third_party' }[]).filter((b) => scopedSet.has(b.project_id));
   const scopedIds = new Set(scoped.map((p) => p.id));
   const scopedTasks = tasks.filter((t) => scopedIds.has(t.project_id));
   const openTasks = scopedTasks.filter((t) => t.status !== 'done');
@@ -173,6 +177,16 @@ export default async function OverviewPage() {
           </Link>
         );
       })()}
+      {openBlockerRows.length > 0 && (
+        <Link href="/blockers" className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-destructive/25 bg-destructive-soft px-4 py-3 text-[13px] transition-colors hover:border-destructive/45">
+          <span className="flex items-center gap-2 font-semibold text-destructive"><OctagonAlert className="size-4" aria-hidden />{openBlockerRows.length} open {openBlockerRows.length === 1 ? 'blocker' : 'blockers'}</span>
+          {(['client', 'internal', 'third_party'] as const).map((sd) => {
+            const n = openBlockerRows.filter((b) => b.side === sd).length;
+            return n ? <span key={sd} className="text-foreground/80">{SIDE_LABEL[sd]}: <span className="font-semibold tabular">{n}</span></span> : null;
+          })}
+          <span className="ml-auto font-medium text-destructive">View →</span>
+        </Link>
+      )}
       <WeekStrip tasks={scopedTasks} projectNames={projectNames} title={isCeo ? 'This week across the company' : 'This week on your projects'} />
       <div className="stagger mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard icon={FolderKanban} label={isCeo ? 'Active projects' : 'Your active projects'} value={live.length} hint={needsAttention.length ? `${needsAttention.length} need attention` : 'All on track'} />

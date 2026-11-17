@@ -249,6 +249,33 @@ async function main() {
   await as('service', `select public.send_deadline_reminders('2026-11-23')`);
   check('an overdue reminder follows a missed deadline', (await as('ceoA', `select title from public.notifications where kind = 'deadline_reminder' and title like '%missed%'`)).length === 1);
 
+  console.log('\nBlockers and history');
+  const [bl] = await as('emp1', `insert into public.blockers (project_id, title, side, raised_by) values ('${D}', 'Waiting for client logo files', 'client', '${U.pm1}') returning id, raised_by, status`);
+  check('a team member raises a client-side blocker (raiser cannot be forged)', bl?.raised_by === U.emp1 && bl?.status === 'open');
+  check('the PM is notified of the blocker', (await as('pm2', `select id from public.notifications where kind = 'blocker'`)).length === 1);
+  await expectDenied('an internal blocker must name the person responsible', () => as('emp1', `insert into public.blockers (project_id, title, side) values ('${D}', 'API not ready', 'internal') returning id`));
+  const [bl2] = await as('pm2', `insert into public.blockers (project_id, title, side, responsible_id) values ('${D}', 'API not ready', 'internal', '${U.emp1}') returning id`);
+  check('the responsible person is notified', (await as('emp1', `select id from public.notifications where kind = 'blocker' and title like '%waiting on you%'`)).length === 1);
+  await expectDenied('non-members cannot raise blockers', () => as('emp2', `insert into public.blockers (project_id, title, side) values ('${D}', 'Nope', 'client') returning id`));
+  check('non-members cannot see blockers', (await as('pm1', `select id from public.blockers where project_id = '${D}'`)).length === 0);
+  check('the CEO sees every blocker', (await as('ceoA', `select id from public.blockers where project_id = '${D}'`)).length === 2);
+  check('Sales sees blockers on their deal', (await as('sales1', `select id from public.blockers where project_id = '${D}'`)).length === 2);
+  await expectOk('Sales raises a client-side blocker on their deal', () => as('sales1', `insert into public.blockers (project_id, title, side) values ('${D}', 'Client has not paid second milestone', 'client') returning id`));
+  await expectDenied('Sales cannot raise an internal blocker on a team they are not in', () => as('sales1', `insert into public.blockers (project_id, title, side, responsible_id) values ('${D}', 'x', 'internal', '${U.emp1}') returning id`));
+  await expectDenied('the raiser cannot resolve a blocker that is not theirs to resolve', () => as('emp1', `update public.blockers set status = 'resolved' where id = '${bl.id}' returning id`));
+  await expectOk('the responsible person resolves their blocker', () => as('emp1', `update public.blockers set status = 'resolved', resolved_note = 'Done' where id = '${bl2.id}' returning id`));
+  check('resolver and time are set by the database', (await as('ceoA', `select resolved_by, resolved_at from public.blockers where id = '${bl2.id}'`))[0]?.resolved_by === U.emp1);
+  await expectOk('the PM resolves any blocker on the project', () => as('pm2', `update public.blockers set status = 'resolved' where id = '${bl.id}' returning id`));
+  await expectDenied('blockers cannot be deleted', () => as('ceoA', `delete from public.blockers where id = '${bl.id}' returning id`));
+  check('raising and resolving are in the history', (await as('pm2', `select id from public.activity_log where project_id = '${D}' and action in ('blocker_raised', 'blocker_resolved')`)).length >= 4);
+  await as('pm2', `update public.tasks set priority = 'high', title = 'UI design' where project_id = '${D}' and title = 'UI'`);
+  const hist = await as('pm2', `select action, details from public.activity_log where project_id = '${D}' and action in ('task_priority_changed', 'task_renamed')`);
+  check('history records before and after values', hist.length === 2 && hist.every((h: any) => h.details.from && h.details.to));
+  await as('emp1', `insert into public.time_entries (project_id, minutes) values ('${D}', 30)`);
+  check('logged time appears in the history', (await as('pm2', `select id from public.activity_log where project_id = '${D}' and action = 'time_logged'`)).length === 1);
+  await expectDenied('history entries cannot be edited', () => as('ceoA', `update public.activity_log set action = 'x' where project_id = '${D}' returning id`));
+  await expectDenied('history entries cannot be deleted', () => as('ceoA', `delete from public.activity_log where project_id = '${D}' returning id`));
+
   console.log('\nProfiles & roles');
   await expectDenied('employee cannot promote themselves', () => as('emp1', `update public.profiles set role = 'ceo' where id = '${U.emp1}' returning id`));
   await expectOk('employee updates their own name', () => as('emp1', `update public.profiles set full_name = 'Eli E.' where id = '${U.emp1}'`));

@@ -5,7 +5,7 @@ import { NotificationsBell } from './notifications-bell';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { BarChart3, FolderKanban, Inbox, Keyboard, LayoutDashboard, ListChecks, LogOut, Menu, Plus, Search, Settings, Sparkles, Users, X } from 'lucide-react';
+import { BarChart3, FolderKanban, Inbox, Keyboard, OctagonAlert, LayoutDashboard, ListChecks, LogOut, Menu, Plus, Search, Settings, Sparkles, Users, X } from 'lucide-react';
 import { cn, APP_NAME } from '@/lib/utils';
 import { ROLE_LABEL } from '@/lib/domain';
 import type { Role, RunningTimer } from '@/lib/types';
@@ -16,23 +16,23 @@ import { CommandPalette, type PaletteProject } from './command-palette';
 import { Button } from './ui/button';
 import { signOut } from '@/app/actions/auth';
 
-type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; badge?: number };
+type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; badge?: number; tone?: 'red' };
 
 /** Each role sees only the places that are useful to it. */
-function navFor(role: Role, incoming: number): NavItem[] {
+function navFor(role: Role, incoming: number, blockers: number): NavItem[] {
   const overview = { href: '/', label: 'Overview', icon: LayoutDashboard };
   const settings = { href: '/settings', label: 'Settings', icon: Settings };
   if (role === 'sales') return [overview, { href: '/projects', label: 'Deals', icon: FolderKanban }, settings];
   const base: NavItem[] = [overview, { href: '/my-work', label: 'My Work', icon: ListChecks }, { href: '/projects', label: 'Projects', icon: FolderKanban }];
-  if (role === 'pm' || role === 'ceo') base.push({ href: '/incoming', label: 'Incoming', icon: Inbox, badge: incoming }, { href: '/reports', label: 'Reports', icon: BarChart3 });
+  if (role === 'pm' || role === 'ceo') base.push({ href: '/incoming', label: 'Incoming', icon: Inbox, badge: incoming }, { href: '/blockers', label: 'Blockers', icon: OctagonAlert, badge: blockers, tone: 'red' }, { href: '/reports', label: 'Reports', icon: BarChart3 });
   return [...base, { href: '/team', label: 'Team', icon: Users }, settings];
 }
 
-export function AppShell({ user, orgName, projects, canCreate, timer, unread, incoming, children }: {
+export function AppShell({ user, orgName, projects, canCreate, timer, unread, incoming, blockers, children }: {
   user: { id: string; full_name: string; role: Role }; orgName: string; projects: PaletteProject[]; canCreate: boolean; timer: RunningTimer | null;
-  unread: number; incoming: number; children: React.ReactNode;
+  unread: number; incoming: number; blockers: number; children: React.ReactNode;
 }) {
-  const nav = navFor(user.role, incoming);
+  const nav = navFor(user.role, incoming, blockers);
   const createHref = user.role === 'sales' ? '/deals/new' : canCreate ? '/projects/new' : null;
   const createLabel = user.role === 'sales' ? 'New deal' : 'New project';
   const pathname = usePathname();
@@ -79,10 +79,10 @@ export function AppShell({ user, orgName, projects, canCreate, timer, unread, in
       </div>
 
       <nav aria-label="Main" className="flex flex-col gap-px">
-        {nav.map(({ href, label, icon: Icon, badge }) => (
+        {nav.map(({ href, label, icon: Icon, badge, tone }) => (
           <Link key={href} href={href} aria-current={isActive(href) ? 'page' : undefined} className={navItem(isActive(href))}>
             <Icon className={cn('size-4 opacity-70 group-hover:opacity-100', isActive(href) && 'text-primary opacity-100 drop-shadow-[0_0_6px_var(--primary)]')} aria-hidden /> {label}
-            {badge ? <span className="ml-auto rounded-full bg-deadline/90 px-1.5 text-[11px] font-semibold leading-[18px] text-white shadow-[0_0_8px_var(--deadline)]">{badge}</span> : null}
+            {badge ? <span className={cn('ml-auto rounded-full px-1.5 text-[11px] font-semibold leading-[18px] text-white', tone === 'red' ? 'bg-destructive/90 shadow-[0_0_8px_var(--destructive)]' : 'bg-deadline/90 shadow-[0_0_8px_var(--deadline)]')}>{badge}</span> : null}
           </Link>
         ))}
 {user.role !== 'sales' && (

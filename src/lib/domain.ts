@@ -57,7 +57,13 @@ export const HEALTH_LABEL: Record<Health, string> = {
  *   off_track  — past due with work remaining, or more than 20% of tasks overdue
  *   at_risk    — any overdue task, or completion trails elapsed time by more than 25 points
  */
-export function projectHealth(p: Pick<Project, 'status' | 'start_date' | 'due_date'>, s: ProjectStats): Health {
+/** `staleBlockers` = open blockers older than 3 days; any of them makes an on-track project at risk. */
+export function projectHealth(p: Pick<Project, 'status' | 'start_date' | 'due_date'>, s: ProjectStats, staleBlockers = 0): Health {
+  const h = baseHealth(p, s);
+  return h === 'on_track' && staleBlockers > 0 ? 'at_risk' : h;
+}
+
+function baseHealth(p: Pick<Project, 'status' | 'start_date' | 'due_date'>, s: ProjectStats): Health {
   if (p.status === 'completed') return 'completed';
   if (p.status === 'incoming') return 'not_started';
   if (s.total === 0) return 'not_started';
@@ -73,17 +79,41 @@ export function projectHealth(p: Pick<Project, 'status' | 'start_date' | 'due_da
 }
 
 type Details = Record<string, string | number | null | undefined>;
+const BLOCKER_SIDE_TEXT: Record<string, string> = { client: 'client side', internal: 'our side', third_party: 'third party' };
+
+/** History filter groups. */
+export const ACTIVITY_GROUPS = { tasks: 'Tasks', project: 'Project', team: 'Team', blockers: 'Blockers', time: 'Time', comments: 'Comments', sales: 'Sales', ai: 'AI' } as const;
+export type ActivityGroup = keyof typeof ACTIVITY_GROUPS;
+export function activityGroup(action: string): ActivityGroup {
+  if (action.startsWith('task_')) return 'tasks';
+  if (action.startsWith('member_') || action === 'project_manager_changed') return 'team';
+  if (action.startsWith('project_')) return 'project';
+  if (action.startsWith('blocker_')) return 'blockers';
+  if (action.startsWith('time_')) return 'time';
+  if (action.startsWith('sales_')) return 'sales';
+  if (action.startsWith('ai_')) return 'ai';
+  return 'comments';
+}
+export const ACTIVITY_GROUP_ACTIONS: Record<ActivityGroup, string> = {
+  tasks: 'task_%', project: 'project_%', team: 'member_%', blockers: 'blocker_%', time: 'time_%', comments: '%comment%', sales: 'sales_%', ai: 'ai_%',
+};
 const ACTIVITY_TEXT: Record<string, (d: Details) => string> = {
   project_created: (d) => `created the project${d.name ? ` “${d.name}”` : ''}`,
   project_status_changed: (d) => `changed project status from ${PROJECT_STATUS_LABEL[d.from as ProjectStatus] ?? d.from} to ${PROJECT_STATUS_LABEL[d.to as ProjectStatus] ?? d.to}`,
-  project_manager_changed: (d) => `made ${d.to ?? 'nobody'} the project manager`,
-  project_due_changed: (d) => `moved the project deadline to ${fmtDate(d.to as string)}`,
+  project_manager_changed: (d) => (d.from ? `changed the project manager: ${d.from} → ${d.to ?? 'nobody'}` : `made ${d.to ?? 'nobody'} the project manager`),
+  project_due_changed: (d) => (d.from ? `changed the project deadline: ${fmtDate(d.from as string)} → ${fmtDate(d.to as string)}` : `set the project deadline to ${fmtDate(d.to as string)}`),
+  project_start_changed: (d) => `changed the start date: ${fmtDate(d.from as string)} → ${fmtDate(d.to as string)}`,
+  project_renamed: (d) => `renamed the project: “${d.from}” → “${d.to}”`,
+  project_priority_changed: (d) => `changed project priority: ${PRIORITY_LABEL[d.from as Priority] ?? d.from} → ${PRIORITY_LABEL[d.to as Priority] ?? d.to}`,
+  project_description_changed: () => 'edited the project description',
   member_added: (d) => `added ${d.member} to the project`,
   member_removed: (d) => `removed ${d.member} from the project`,
   task_created: (d) => `created “${d.title}”${d.assignee ? ` for ${d.assignee}` : ''}`,
-  task_assigned: (d) => (d.to ? `assigned “${d.title}” to ${d.to}` : `unassigned “${d.title}”`),
+  task_assigned: (d) => (d.from && d.to ? `reassigned “${d.title}”: ${d.from} → ${d.to}` : d.to ? `assigned “${d.title}” to ${d.to}` : `unassigned “${d.title}”${d.from ? ` (was ${d.from})` : ''}`),
   task_status_changed: (d) => `moved “${d.title}” from ${TASK_STATUS_LABEL[d.from as TaskStatus] ?? d.from} to ${TASK_STATUS_LABEL[d.to as TaskStatus] ?? d.to}`,
-  task_due_changed: (d) => `changed the due date of “${d.title}” to ${fmtDate(d.to as string)}`,
+  task_due_changed: (d) => `changed the due date of “${d.title}”: ${d.from ? fmtDate(d.from as string) : 'none'} → ${d.to ? fmtDate(d.to as string) : 'none'}`,
+  task_priority_changed: (d) => `changed the priority of “${d.title}”: ${PRIORITY_LABEL[d.from as Priority] ?? d.from} → ${PRIORITY_LABEL[d.to as Priority] ?? d.to}`,
+  task_renamed: (d) => `renamed a task: “${d.from}” → “${d.to}”`,
   task_deleted: (d) => `deleted “${d.title}”`,
   comment_added: (d) => `commented on “${d.title}”`,
   progress_update_posted: (d) => `posted a progress update on “${d.title}”`,
@@ -93,6 +123,12 @@ const ACTIVITY_TEXT: Record<string, (d: Details) => string> = {
   ai_signal_reviewed: (d) => `${d.status === 'dismissed' ? 'dismissed' : 'reviewed'} the risk signal “${d.title}”`,
   ai_task_draft_applied: (d) => `applied an AI draft (${d.mode}) to “${d.title}”`,
   ai_org_summary: () => 'generated an AI company summary',
+  blocker_raised: (d) => `raised a blocker (${BLOCKER_SIDE_TEXT[d.side as string] ?? d.side}${d.responsible ? ` · ${d.responsible}` : ''}): “${d.title}”`,
+  blocker_resolved: (d) => `resolved the blocker “${d.title}” ${Number(d.days) === 0 ? 'the same day' : `after ${d.days} ${Number(d.days) === 1 ? 'day' : 'days'}`}${d.note ? ` — ${d.note}` : ''}`,
+  blocker_reopened: (d) => `reopened the blocker “${d.title}”`,
+  blocker_reassigned: (d) => `moved the blocker “${d.title}”: ${d.from} → ${d.to}`,
+  time_logged: (d) => `logged ${fmtMinutes(Number(d.minutes))}${d.timer ? ' with the timer' : ''} for ${fmtDate(d.date as string, 'd MMM')}`,
+  time_deleted: (d) => `deleted ${fmtMinutes(Number(d.minutes))} of ${d.person ?? 'someone'}'s time (${fmtDate(d.date as string, 'd MMM')})`,
   sales_created: (d) => `added the sales info${d.client ? ` for ${d.client}` : ''}`,
   sales_updated: (d) => {
     const p = d.payment_status as unknown as { from?: string; to?: string } | null;

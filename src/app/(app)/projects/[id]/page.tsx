@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { CalendarDays, Pencil, Sparkles, Users } from 'lucide-react';
+import { CalendarDays, History, OctagonAlert, Pencil, Sparkles, Users } from 'lucide-react';
+import { BlockerRows, RaiseBlockerDialog } from '@/components/blockers/blocker-ui';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,7 +39,7 @@ export default async function ProjectPage({ params, searchParams }: {
   const supabase = await db();
   const detail = await getProjectDetail(supabase, id);
   if (!detail) notFound(); // also covers "exists but you can't see it" — RLS hides it
-  const { project, memberIds, activity, stats, health } = detail;
+  const { project, memberIds, activity, stats, health, blockers } = detail;
   const [people, filteredTasks, { data: timeData }, { data: myRun }, { data: salesRow }] = await Promise.all([
     listProfiles(supabase),
     listTasks(supabase, session.userId, { ...parseFilters(sp), project: id }),
@@ -75,6 +76,8 @@ export default async function ProjectPage({ params, searchParams }: {
     shownHealth = projectHealth(project, shownStats);
   }
   const canTake = project.status === 'incoming' && !project.manager_id && session.profile.role === 'pm';
+  const openBlockers = blockers.filter((b) => b.status === 'open');
+  const resolvedBlockers = blockers.filter((b) => b.status === 'resolved');
   const manager = project.manager_id ? peopleMap.get(project.manager_id) : null;
   const ref = { id: project.id, name: project.name, manager_id: project.manager_id, memberIds };
   const members = memberIds.map((m) => peopleMap.get(m)).filter((p): p is NonNullable<typeof p> => Boolean(p));
@@ -188,6 +191,35 @@ export default async function ProjectPage({ params, searchParams }: {
         </div>
       )}
 
+      <Card className="mt-6 scroll-mt-20" id="blockers">
+        <CardHeader>
+          <div>
+            <CardTitle className="flex items-center gap-2"><OctagonAlert className="size-4 text-destructive" aria-hidden /> Blockers
+              {openBlockers.length > 0 && <span className="rounded-full bg-destructive-soft px-2 text-[12px] font-medium text-destructive">{openBlockers.length} open</span>}
+            </CardTitle>
+            <CardDescription>What is stopping work, and whose side it is on.</CardDescription>
+          </div>
+          {(manages || isMember || session.profile.role === 'ceo' || sales?.sales_owner_id === session.userId) && project.status !== 'completed' && (
+            <RaiseBlockerDialog projectId={id} tasks={dealView ? [] : detail.tasks.filter((t) => t.status !== 'done').map((t) => ({ id: t.id, title: t.title }))}
+              people={people.filter((p) => memberIds.includes(p.id) || p.id === project.manager_id).map((p) => ({ id: p.id, full_name: p.full_name }))}
+              salesOnly={dealView} />
+          )}
+        </CardHeader>
+        <CardContent>
+          {blockers.length === 0 ? <p className="py-2 text-[13px] text-muted-foreground">Nothing is blocked right now.</p> : (
+            <>
+              <BlockerRows blockers={openBlockers} people={people} tasks={detail.tasks} meId={session.userId} managerIds={manages ? [id] : []} />
+              {resolvedBlockers.length > 0 && (
+                <details className="mt-2 border-t pt-2">
+                  <summary className="cursor-pointer text-[12.5px] text-muted-foreground hover:text-foreground">{resolvedBlockers.length} resolved</summary>
+                  <BlockerRows blockers={resolvedBlockers} people={people} tasks={detail.tasks} meId={session.userId} managerIds={manages ? [id] : []} />
+                </details>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
       {!dealView && (<>
       <section className="mt-8" aria-labelledby="tasks-heading">
         <h2 id="tasks-heading" className="mb-3 text-lg font-semibold">Tasks</h2>
@@ -203,6 +235,7 @@ export default async function ProjectPage({ params, searchParams }: {
           emptyDescription={filtersActive ? 'Try clearing a filter.' : manages ? 'Add tasks one by one, or draft a plan with AI and pick the ones you want.' : isMember ? 'No tasks yet. Use “Add my task” to add something you’re working on.' : 'Your project manager hasn’t added tasks yet.'}
           emptyAction={!filtersActive && manages ? <Button asChild variant="ai"><Link href={`/projects/${id}/plan`}><Sparkles /> Draft tasks with AI</Link></Button> : undefined}
           quickAdd={manages || isMember ? { projectId: id, selfId: manages ? null : session.userId } : undefined}
+          blockedTaskIds={openBlockers.map((b) => b.task_id).filter((x): x is string => Boolean(x))}
         />
       </section>
 
@@ -222,7 +255,7 @@ export default async function ProjectPage({ params, searchParams }: {
       </>)}
 
       <Card className="mt-8">
-        <CardHeader><CardTitle>Activity</CardTitle><CardDescription>Who changed what, and when</CardDescription></CardHeader>
+        <CardHeader><div><CardTitle>Activity</CardTitle><CardDescription>The latest changes. The full history has every change, with filters.</CardDescription></div><Button asChild size="sm" variant="outline"><Link href={`/projects/${id}/history`}><History /> Full history</Link></Button></CardHeader>
         <CardContent><ActivityFeed items={activity} people={peopleMap} /></CardContent>
       </Card>
     </>

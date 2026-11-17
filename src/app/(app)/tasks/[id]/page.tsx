@@ -10,6 +10,9 @@ import { isOwnTask } from '@/components/tasks/types';
 import { DeleteTaskButton } from '@/components/delete-buttons';
 import { TaskAssistant } from '@/components/ai/task-assistant';
 import { TaskTimeBox } from '@/components/time/time-tracker';
+import { BlockerRows, RaiseBlockerDialog } from '@/components/blockers/blocker-ui';
+import { OctagonAlert } from 'lucide-react';
+import type { Blocker } from '@/lib/blockers';
 import type { RunningTimer } from '@/lib/types';
 import { CommentComposer } from '@/components/ai/comment-composer';
 import { requireSession } from '@/lib/session';
@@ -28,12 +31,14 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   const detail = await getTaskDetail(supabase, id);
   if (!detail) notFound();
   const { task, project, comments, activity } = detail;
-  const [people, { data: members }, { data: taskTime }, { data: myRun }] = await Promise.all([
+  const [people, { data: members }, { data: taskTime }, { data: myRun }, { data: taskBlockers }] = await Promise.all([
     listProfiles(supabase),
     supabase.from('project_members').select('profile_id').eq('project_id', project.id),
     supabase.from('time_entries').select('minutes').eq('task_id', id).not('minutes', 'is', null),
     supabase.from('time_entries').select('id, project_id, task_id, started_at').eq('profile_id', session.userId).is('minutes', null).is('ended_at', null).maybeSingle(),
+    supabase.from('blockers').select('*').eq('task_id', id).order('status').order('created_at', { ascending: false }),
   ]);
+  const blockers = (taskBlockers ?? []) as Blocker[];
   const taskMinutes = (taskTime ?? []).reduce((n, e) => n + (e.minutes ?? 0), 0);
   const myTimer = myRun ? { ...myRun, project_name: project.name, task_title: task.title } as RunningTimer : null;
   const peopleMap = byId(people);
@@ -62,6 +67,19 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
       />
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         <div className="space-y-6">
+          {(blockers.length > 0 || task.status !== 'done') && (
+            <Card className={blockers.some((b) => b.status === 'open') ? 'border-destructive/30' : undefined}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><OctagonAlert className="size-4 text-destructive" aria-hidden /> Blockers</CardTitle>
+                <RaiseBlockerDialog projectId={project.id} tasks={[{ id: task.id, title: task.title }]} defaultTaskId={task.id}
+                  people={people.filter((p) => ref.memberIds.includes(p.id) || p.id === project.manager_id).map((p) => ({ id: p.id, full_name: p.full_name }))} />
+              </CardHeader>
+              <CardContent>
+                {blockers.length ? <BlockerRows blockers={blockers} people={people} meId={session.userId} managerIds={manages ? [project.id] : []} />
+                  : <p className="text-[13px] text-muted-foreground">Nothing blocking this task.</p>}
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardHeader><CardTitle>Description</CardTitle></CardHeader>
             <CardContent className="space-y-5">
