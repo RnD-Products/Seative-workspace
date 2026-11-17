@@ -1,10 +1,11 @@
 'use client';
 import { Toaster } from './ui/toast';
 import { Shortcuts } from './shortcuts';
+import { NotificationsBell } from './notifications-bell';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { BarChart3, FolderKanban, Keyboard, LayoutDashboard, ListChecks, LogOut, Menu, Plus, Search, Settings, Sparkles, Users, X } from 'lucide-react';
+import { BarChart3, FolderKanban, Inbox, Keyboard, LayoutDashboard, ListChecks, LogOut, Menu, Plus, Search, Settings, Sparkles, Users, X } from 'lucide-react';
 import { cn, APP_NAME } from '@/lib/utils';
 import { ROLE_LABEL } from '@/lib/domain';
 import type { Role, RunningTimer } from '@/lib/types';
@@ -15,17 +16,25 @@ import { CommandPalette, type PaletteProject } from './command-palette';
 import { Button } from './ui/button';
 import { signOut } from '@/app/actions/auth';
 
-const NAV = [
-  { href: '/', label: 'Overview', icon: LayoutDashboard },
-  { href: '/my-work', label: 'My Work', icon: ListChecks },
-  { href: '/projects', label: 'Projects', icon: FolderKanban },
-  { href: '/team', label: 'Team', icon: Users },
-  { href: '/settings', label: 'Settings', icon: Settings },
-];
+type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; badge?: number };
 
-export function AppShell({ user, orgName, projects, canCreate, timer, children }: {
-  user: { id: string; full_name: string; role: Role }; orgName: string; projects: PaletteProject[]; canCreate: boolean; timer: RunningTimer | null; children: React.ReactNode;
+/** Each role sees only the places that are useful to it. */
+function navFor(role: Role, incoming: number): NavItem[] {
+  const overview = { href: '/', label: 'Overview', icon: LayoutDashboard };
+  const settings = { href: '/settings', label: 'Settings', icon: Settings };
+  if (role === 'sales') return [overview, { href: '/projects', label: 'Deals', icon: FolderKanban }, settings];
+  const base: NavItem[] = [overview, { href: '/my-work', label: 'My Work', icon: ListChecks }, { href: '/projects', label: 'Projects', icon: FolderKanban }];
+  if (role === 'pm' || role === 'ceo') base.push({ href: '/incoming', label: 'Incoming', icon: Inbox, badge: incoming }, { href: '/reports', label: 'Reports', icon: BarChart3 });
+  return [...base, { href: '/team', label: 'Team', icon: Users }, settings];
+}
+
+export function AppShell({ user, orgName, projects, canCreate, timer, unread, incoming, children }: {
+  user: { id: string; full_name: string; role: Role }; orgName: string; projects: PaletteProject[]; canCreate: boolean; timer: RunningTimer | null;
+  unread: number; incoming: number; children: React.ReactNode;
 }) {
+  const nav = navFor(user.role, incoming);
+  const createHref = user.role === 'sales' ? '/deals/new' : canCreate ? '/projects/new' : null;
+  const createLabel = user.role === 'sales' ? 'New deal' : 'New project';
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [palette, setPalette] = useState(false);
@@ -58,30 +67,29 @@ export function AppShell({ user, orgName, projects, canCreate, timer, children }
           <span aria-hidden className="glow-primary grid size-[22px] shrink-0 place-items-center rounded-[6px] text-[12px] font-bold text-white">S</span>
           <span className="truncate text-[13px] font-semibold text-ink-strong">{orgName}</span>
         </Link>
+        <NotificationsBell initialUnread={unread} />
         <button onClick={() => setPalette(true)} className="grid size-7 place-items-center rounded-md text-ink-foreground hover:bg-foreground/[0.06] hover:text-ink-strong" title={`Search (${isMac ? '⌘' : 'Ctrl'} K)`}>
           <Search className="size-4" aria-hidden /><span className="sr-only">Search</span>
         </button>
-        {canCreate && (
-          <Link href="/projects/new" className="grid size-7 place-items-center rounded-md border border-border-strong bg-card text-ink-strong hover:bg-muted" title="New project">
-            <Plus className="size-4" aria-hidden /><span className="sr-only">New project</span>
+        {createHref && (
+          <Link href={createHref} className="grid size-7 place-items-center rounded-md border border-border-strong bg-card text-ink-strong hover:bg-muted" title={createLabel}>
+            <Plus className="size-4" aria-hidden /><span className="sr-only">{createLabel}</span>
           </Link>
         )}
       </div>
 
       <nav aria-label="Main" className="flex flex-col gap-px">
-        {NAV.map(({ href, label, icon: Icon }) => (
+        {nav.map(({ href, label, icon: Icon, badge }) => (
           <Link key={href} href={href} aria-current={isActive(href) ? 'page' : undefined} className={navItem(isActive(href))}>
             <Icon className={cn('size-4 opacity-70 group-hover:opacity-100', isActive(href) && 'text-primary opacity-100 drop-shadow-[0_0_6px_var(--primary)]')} aria-hidden /> {label}
+            {badge ? <span className="ml-auto rounded-full bg-deadline/90 px-1.5 text-[11px] font-semibold leading-[18px] text-white shadow-[0_0_8px_var(--deadline)]">{badge}</span> : null}
           </Link>
         ))}
-        {canCreate && (
-          <Link href="/reports" aria-current={pathname.startsWith('/reports') ? 'page' : undefined} className={navItem(pathname.startsWith('/reports'))}>
-            <BarChart3 className={cn('size-4 opacity-70 group-hover:opacity-100', pathname.startsWith('/reports') && 'text-primary opacity-100 drop-shadow-[0_0_6px_var(--primary)]')} aria-hidden /> Reports
-          </Link>
-        )}
+{user.role !== 'sales' && (
         <Link href="/ask" aria-current={pathname === '/ask' ? 'page' : undefined} className={navItem(pathname === '/ask')}>
           <Sparkles className="size-4 text-ai" aria-hidden /> Ask about work
         </Link>
+        )}
       </nav>
 
       {projects.length > 0 ? (
@@ -151,7 +159,8 @@ export function AppShell({ user, orgName, projects, canCreate, timer, children }
           <div className="ml-auto flex items-center gap-1">
             {timer && <RunningTimerPill timer={timer} compact />}
             <button onClick={() => setPalette(true)} className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted" aria-label="Search"><Search className="size-4" /></button>
-            {canCreate && <Button asChild size="icon" variant="ghost"><Link href="/projects/new" aria-label="New project"><Plus /></Link></Button>}
+            <NotificationsBell initialUnread={unread} />
+            {createHref && <Button asChild size="icon" variant="ghost"><Link href={createHref} aria-label={createLabel}><Plus /></Link></Button>}
           </div>
         </header>
         <main id="main" className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-7">

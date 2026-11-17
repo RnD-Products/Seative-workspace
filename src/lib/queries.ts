@@ -30,14 +30,17 @@ export interface ProjectWithStats extends Project {
 }
 
 export async function listProjects(supabase: Supabase): Promise<ProjectWithStats[]> {
-  const [{ data: projects, error }, { data: tasks }, { data: members }] = await Promise.all([
+  const [{ data: projects, error }, { data: tasks }, { data: members }, { data: dealRows }] = await Promise.all([
     supabase.from('projects').select('*').order('due_date', { ascending: true, nullsFirst: false }),
     supabase.from('tasks').select('project_id, status, due_date'),
     supabase.from('project_members').select('project_id, profile_id'),
+    // Salespeople cannot read tasks; this gives them progress counts for their own deals.
+    supabase.rpc('deal_task_rows'),
   ]);
   if (error) throw new Error(error.message);
   return ((projects ?? []) as Project[]).map((p) => {
-    const ts = (tasks ?? []).filter((t) => t.project_id === p.id) as Pick<Task, 'status' | 'due_date'>[];
+    let ts = (tasks ?? []).filter((t) => t.project_id === p.id) as Pick<Task, 'status' | 'due_date'>[];
+    if (!ts.length) ts = ((dealRows ?? []) as { project_id: string; status: Task['status']; due_date: string | null }[]).filter((t) => t.project_id === p.id);
     const stats = projectStats(ts);
     return {
       ...p,

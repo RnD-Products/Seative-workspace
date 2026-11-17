@@ -5,7 +5,7 @@ import {
 } from '@/lib/domain';
 import type { Priority, ProjectStatus, Role, TaskStatus } from '@/lib/types';
 
-const projTone = { planning: 'purple', active: 'blue', on_hold: 'amber', completed: 'green' } as const;
+const projTone = { incoming: 'deadline', planning: 'purple', active: 'blue', on_hold: 'amber', completed: 'green' } as const;
 const healthTone = { on_track: 'green', at_risk: 'amber', off_track: 'red', completed: 'gray', not_started: 'gray' } as const;
 
 export const TaskStatusBadge = ({ status }: { status: TaskStatus }) => (
@@ -16,7 +16,7 @@ export const PriorityBadge = ({ priority }: { priority: Priority }) => (
   <Badge tone={priority === 'urgent' ? 'red' : 'gray'} className="pl-1.5"><PriorityIcon priority={priority} className="size-3" />{PRIORITY_LABEL[priority]}</Badge>
 );
 export const HealthBadge = ({ health }: { health: Health }) => <Badge tone={healthTone[health]} dot>{HEALTH_LABEL[health]}</Badge>;
-export const RoleBadge = ({ role }: { role: Role }) => <Badge tone={role === 'ceo' ? 'purple' : role === 'pm' ? 'blue' : 'gray'}>{ROLE_LABEL[role]}</Badge>;
+export const RoleBadge = ({ role }: { role: Role }) => <Badge tone={role === 'ceo' ? 'purple' : role === 'pm' ? 'blue' : role === 'sales' ? 'green' : 'gray'}>{ROLE_LABEL[role]}</Badge>;
 
 const COLORS = ['bg-indigo-500/90', 'bg-rose-500/90', 'bg-amber-600/90', 'bg-emerald-600/90', 'bg-sky-600/90', 'bg-violet-500/90', 'bg-teal-600/90', 'bg-orange-500/90'];
 const colorFor = (id: string) => COLORS[[...id].reduce((s, c) => s + c.charCodeAt(0), 0) % COLORS.length];

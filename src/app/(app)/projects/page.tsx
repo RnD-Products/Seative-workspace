@@ -18,7 +18,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
   const session = await requireSession();
   const sp = await searchParams;
   const q = (sp.q ?? '').trim().toLowerCase().slice(0, 100);
-  const status = PROJECT_STATUSES.includes(sp.status as never) ? sp.status : '';
+  const status = (['incoming', ...PROJECT_STATUSES] as string[]).includes(sp.status ?? '') ? sp.status : '';
   const scope = sp.scope === 'mine' ? 'mine' : 'all';
   const supabase = await db();
   const [all, people] = await Promise.all([listProjects(supabase), listProfiles(supabase)]);
@@ -32,9 +32,9 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <PageHeader
-        title="Projects"
-        description={session.profile.role === 'employee' ? 'Projects you are a member of' : session.profile.role === 'pm' ? 'Projects you manage or belong to' : 'Every project in your organization'}
-        actions={<>
+        title={session.profile.role === 'sales' ? 'Deals' : 'Projects'}
+        description={session.profile.role === 'sales' ? 'Projects you sold, with their progress' : session.profile.role === 'employee' ? 'Projects you are a member of' : session.profile.role === 'pm' ? 'Projects you manage or belong to' : 'Every project in your organization'}
+        actions={session.profile.role === 'sales' ? <Button asChild><Link href="/deals/new"><Plus /> New deal</Link></Button> : <>
           <Button asChild variant="outline"><Link href="/tasks"><ListChecks /> All tasks</Link></Button>
         </>}
       />
@@ -47,9 +47,9 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
         <label htmlFor="status" className="sr-only">Status</label>
         <NativeSelect id="status" name="status" defaultValue={status} className="sm:w-44">
           <option value="">All statuses</option>
-          {PROJECT_STATUSES.map((s) => <option key={s} value={s}>{PROJECT_STATUS_LABEL[s]}</option>)}
+          {(['incoming', ...PROJECT_STATUSES] as const).map((s) => <option key={s} value={s}>{PROJECT_STATUS_LABEL[s]}</option>)}
         </NativeSelect>
-        {session.profile.role !== 'employee' && (
+        {(session.profile.role === 'pm' || session.profile.role === 'ceo') && (
           <>
             <label htmlFor="scope" className="sr-only">Scope</label>
             <NativeSelect id="scope" name="scope" defaultValue={scope} className="sm:w-44">

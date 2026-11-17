@@ -22,6 +22,7 @@ const U = {
   emp2: '00000000-0000-0000-0000-000000000004',
   ceoB: '00000000-0000-0000-0000-00000000000b',
   empB: '00000000-0000-0000-0000-00000000000c',
+  sales1: '00000000-0000-0000-0000-000000000005',
 };
 const ORG_B = '11111111-1111-1111-1111-111111111111';
 
@@ -94,6 +95,7 @@ async function main() {
       ('${U.pm2}', '${orgA}', 'Quinn PM', 'pm2@example.com', 'pm'),
       ('${U.emp1}', '${orgA}', 'Eli Employee', 'emp1@example.com', 'employee'),
       ('${U.emp2}', '${orgA}', 'Eve Employee', 'emp2@example.com', 'employee'),
+      ('${U.sales1}', '${orgA}', 'Sam Sales', 'sales1@example.com', 'sales'),
       ('${U.ceoB}', '${ORG_B}', 'Bea CEO', 'ceoB@example.com', 'ceo'),
       ('${U.empB}', '${ORG_B}', 'Bo Employee', 'empB@example.com', 'employee')
   `);
@@ -197,6 +199,55 @@ async function main() {
   await expectDenied('AI content is immutable', () => as('pm1', `update public.ai_generated_artifacts set content = '{"title":"y"}' where id = '${art.id}' returning id`));
   await expectDenied('PM cannot save an org-wide summary', () => as('pm1', `insert into public.ai_generated_artifacts (kind, content) values ('org_summary', '{}') returning id`));
   await expectOk('CEO saves an org-wide summary', () => as('ceoA', `insert into public.ai_generated_artifacts (kind, content) values ('org_summary', '{}')`));
+
+  console.log('\nSales, Incoming projects and notifications');
+  const [deal] = await as('sales1', `insert into public.projects (name, manager_id, status) values ('Deal: Cafe app', '${U.pm1}', 'active') returning id, manager_id, status`);
+  check('Sales creates a project: it arrives Incoming with no PM', deal?.manager_id === null && deal?.status === 'incoming');
+  const D = deal.id;
+  const [sale] = await as('sales1', `insert into public.project_sales (project_id, client_name, contract_amount, currency, sales_owner_id) values ('${D}', 'Cafe Co', 150000, 'BDT', '${U.ceoA}') returning sales_owner_id`);
+  check('Sales adds sales info and owns it (owner cannot be forged)', sale?.sales_owner_id === U.sales1);
+  await expectDenied('Sales cannot add sales info to a project they did not create', () => as('sales1', `insert into public.project_sales (project_id, client_name) values ('${P}', 'X') returning project_id`));
+  await expectDenied('employee cannot create projects from a deal', () => as('emp1', `insert into public.projects (name, status) values ('Nope', 'incoming') returning id`));
+  check('every PM sees Incoming projects', (await as('pm2', `select id from public.projects where id = '${D}'`)).length === 1);
+  check('PM sees the sales info of an Incoming project', (await as('pm2', `select contract_amount from public.project_sales where project_id = '${D}'`)).length === 1);
+  check('employees never see sales info', (await as('emp1', `select project_id from public.project_sales`)).length === 0);
+  check('employees do not see Incoming projects', (await as('emp1', `select id from public.projects where id = '${D}'`)).length === 0);
+  check('Sales does not see other projects', (await as('sales1', `select id from public.projects where id = '${P}'`)).length === 0);
+  check('Sales cannot read tasks of their deal', (await as('sales1', `select id from public.tasks where project_id = '${D}'`)).length === 0);
+  await expectDenied('PM cannot edit sales info', () => as('pm2', `update public.project_sales set contract_amount = 1 where project_id = '${D}' returning project_id`));
+  await expectOk('Sales records a payment on their deal', () => as('sales1', `update public.project_sales set advance_received = 50000, payment_status = 'advance_paid' where project_id = '${D}' returning project_id`));
+  check('PMs get a notification for the new Incoming project', (await as('pm2', `select id from public.notifications where kind = 'incoming_project'`)).length === 1);
+  await expectDenied('a PM cannot assign the project to another PM', () => as('pm2', `update public.projects set manager_id = '${U.pm1}' where id = '${D}' returning id`));
+  await expectOk('a PM takes the Incoming project', () => as('pm2', `update public.projects set manager_id = '${U.pm2}' where id = '${D}' returning id`));
+  check('once taken, other PMs no longer see it', (await as('pm1', `select id from public.projects where id = '${D}'`)).length === 0);
+  check('the other PM no longer sees its sales info', (await as('pm1', `select project_id from public.project_sales where project_id = '${D}'`)).length === 0);
+  await expectOk('the new manager adds a designer', () => as('pm2', `insert into public.project_members (project_id, profile_id) values ('${D}', '${U.emp1}')`));
+  await expectOk('the manager starts the project', () => as('pm2', `update public.projects set status = 'active' where id = '${D}' returning id`));
+  check('the designer is notified they were added', (await as('emp1', `select id from public.notifications where kind = 'project_added' and project_id = '${D}'`)).length === 1);
+  check('Sales is notified the team was assigned', (await as('sales1', `select id from public.notifications where kind = 'team_assigned'`)).length === 1);
+  check('Sales sees who is on their deal', (await as('sales1', `select profile_id from public.project_members where project_id = '${D}'`)).length === 1);
+  await as('pm2', `insert into public.tasks (project_id, title, status) values ('${D}', 'Wireframes', 'done'), ('${D}', 'UI', 'todo')`);
+  check('Sales sees progress counts without task details', (await as('sales1', `select * from public.deal_task_rows()`)).length === 2);
+  check('sales history is hidden from employees on the project', (await as('emp1', `select id from public.activity_log where project_id = '${D}' and action like 'sales%'`)).length === 0);
+  check('sales history is visible to the manager', (await as('pm2', `select id from public.activity_log where project_id = '${D}' and action like 'sales%'`)).length >= 1);
+  check('notifications are private to the recipient', (await as('pm1', `select id from public.notifications where recipient_id = '${U.emp1}'`)).length === 0);
+  await expectDenied('a notification cannot be rewritten', () => as('emp1', `update public.notifications set title = 'x' where recipient_id = '${U.emp1}' returning id`));
+  await expectOk('a notification can be marked read', () => as('emp1', `update public.notifications set read_at = now() where recipient_id = '${U.emp1}' returning id`));
+  await expectDenied('employee cannot change skill tags', () => as('emp1', `update public.profiles set skills = '{Figma}' where id = '${U.emp1}' returning id`));
+  await expectOk('CEO sets skill tags', () => as('ceoA', `update public.profiles set skills = '{UI/UX,Mobile}' where id = '${U.emp1}' returning id`));
+  await expectDenied("cannot change someone else's notification settings", () => as('ceoA', `update public.profiles set notification_prefs = '{"task_assigned": false}' where id = '${U.emp1}' returning id`));
+  // Deadline reminders: project due Sunday 22 Nov 2026 -> reminder on Wednesday 18 Nov (Fri/Sat skipped)
+  await as('service', `update public.projects set due_date = '2026-11-22' where id = '${D}'`);
+  await as('service', `select public.send_deadline_reminders('2026-11-17')`);
+  check('no reminder 3 working days before', (await as('ceoA', `select id from public.notifications where kind = 'deadline_reminder'`)).length === 0);
+  await as('service', `select public.send_deadline_reminders('2026-11-18')`);
+  check('CEO gets a reminder 2 working days before', (await as('ceoA', `select id from public.notifications where kind = 'deadline_reminder'`)).length === 1);
+  check('the project manager gets it too', (await as('pm2', `select id from public.notifications where kind = 'deadline_reminder'`)).length === 1);
+  await as('service', `select public.send_deadline_reminders('2026-11-18')`);
+  check('the reminder is not sent twice', (await as('ceoA', `select id from public.notifications where kind = 'deadline_reminder'`)).length === 1);
+  check('employees do not get deadline reminders', (await as('emp1', `select id from public.notifications where kind = 'deadline_reminder'`)).length === 0);
+  await as('service', `select public.send_deadline_reminders('2026-11-23')`);
+  check('an overdue reminder follows a missed deadline', (await as('ceoA', `select title from public.notifications where kind = 'deadline_reminder' and title like '%missed%'`)).length === 1);
 
   console.log('\nProfiles & roles');
   await expectDenied('employee cannot promote themselves', () => as('emp1', `update public.profiles set role = 'ceo' where id = '${U.emp1}' returning id`));

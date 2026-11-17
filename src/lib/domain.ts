@@ -1,14 +1,16 @@
 import { differenceInCalendarDays, format, formatDistanceToNow, parseISO } from 'date-fns';
 import type { Priority, Project, ProjectStatus, Role, Task, TaskStatus } from './types';
 
-export const ROLE_LABEL: Record<Role, string> = { employee: 'Employee', pm: 'Project Manager', ceo: 'CEO' };
+export const ROLE_LABEL: Record<Role, string> = { employee: 'Employee', sales: 'Sales', pm: 'Project Manager', ceo: 'CEO' };
+export const ROLES: Role[] = ['employee', 'sales', 'pm', 'ceo'];
 export const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
   todo: 'To do', in_progress: 'In progress', in_review: 'In review', done: 'Done',
 };
 export const TASK_STATUSES: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done'];
 export const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = {
-  planning: 'Planning', active: 'Active', on_hold: 'On hold', completed: 'Completed',
+  incoming: 'Incoming', planning: 'Planning', active: 'Active', on_hold: 'On hold', completed: 'Completed',
 };
+/** Statuses a PM can set; "Incoming" is reserved for new deals from Sales. */
 export const PROJECT_STATUSES: ProjectStatus[] = ['planning', 'active', 'on_hold', 'completed'];
 export const PRIORITY_LABEL: Record<Priority, string> = { low: 'Low', medium: 'Medium', high: 'High', urgent: 'Urgent' };
 export const PRIORITIES: Priority[] = ['low', 'medium', 'high', 'urgent'];
@@ -57,6 +59,7 @@ export const HEALTH_LABEL: Record<Health, string> = {
  */
 export function projectHealth(p: Pick<Project, 'status' | 'start_date' | 'due_date'>, s: ProjectStats): Health {
   if (p.status === 'completed') return 'completed';
+  if (p.status === 'incoming') return 'not_started';
   if (s.total === 0) return 'not_started';
   if (p.due_date && daysUntil(p.due_date) < 0 && s.done < s.total) return 'off_track';
   if (s.overdue / s.total > 0.2) return 'off_track';
@@ -90,6 +93,13 @@ const ACTIVITY_TEXT: Record<string, (d: Details) => string> = {
   ai_signal_reviewed: (d) => `${d.status === 'dismissed' ? 'dismissed' : 'reviewed'} the risk signal “${d.title}”`,
   ai_task_draft_applied: (d) => `applied an AI draft (${d.mode}) to “${d.title}”`,
   ai_org_summary: () => 'generated an AI company summary',
+  sales_created: (d) => `added the sales info${d.client ? ` for ${d.client}` : ''}`,
+  sales_updated: (d) => {
+    const p = d.payment_status as unknown as { from?: string; to?: string } | null;
+    if (p?.to) return `changed the payment status to ${p.to.replace(/_/g, ' ')}`;
+    const f = (d.fields as unknown as string[] | undefined) ?? [];
+    return `updated the sales info (${f.map((x) => x.replace(/_/g, ' ')).join(', ')})`;
+  },
 };
 
 export function describeActivity(action: string, details: Record<string, unknown>) {

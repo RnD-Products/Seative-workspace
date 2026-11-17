@@ -27,7 +27,7 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
             people={people}
             me={session.profile}
             defaults={{
-              name: p.name, description: p.description, status: p.status, priority: p.priority,
+              name: p.name, description: p.description, status: p.status === 'incoming' ? 'planning' : p.status, priority: p.priority,
               start_date: p.start_date ?? '', due_date: p.due_date ?? '', manager_id: p.manager_id ?? '', member_ids: detail.memberIds,
             }}
           />
