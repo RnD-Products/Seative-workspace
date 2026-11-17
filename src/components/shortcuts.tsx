@@ -18,6 +18,7 @@ const GO: Record<string, { href: string; label: string }> = {
   t: { href: '/tasks', label: 'All tasks' },
   e: { href: '/team', label: 'Team' },
   s: { href: '/settings', label: 'Settings' },
+  r: { href: '/reports', label: 'Time reports (CEO & PMs)' },
   a: { href: '/ask', label: 'Ask about work' },
 };
 

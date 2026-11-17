@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { CornerDownLeft, FolderKanban, LayoutDashboard, ListChecks, Plus, Search, Settings, Sparkles, Users } from 'lucide-react';
+import { CornerDownLeft, FolderKanban, LayoutDashboard, ListChecks, Plus, Search, Settings, Sparkles, Users, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface PaletteProject { id: string; name: string; color: string }
@@ -26,6 +26,7 @@ export function CommandPalette({ open, onOpenChange, projects, canCreate }: {
       { id: 'projects', label: 'Projects', group: 'Go to', icon: <FolderKanban />, run: () => go('/projects') },
       { id: 'tasks', label: 'All tasks', group: 'Go to', icon: <ListChecks />, run: () => go('/tasks') },
       { id: 'team', label: 'Team', group: 'Go to', icon: <Users />, run: () => go('/team') },
+      ...(canCreate ? [{ id: 'reports', label: 'Time reports', group: 'Go to', icon: <BarChart3 />, run: () => go('/reports') }] : []),
       { id: 'settings', label: 'Settings', group: 'Go to', icon: <Settings />, run: () => go('/settings') },
       ...(canCreate ? [{ id: 'new', label: 'New project', group: 'Actions', icon: <Plus />, run: () => go('/projects/new') }] : []),
       { id: 'ask', label: 'Ask about work', group: 'Actions', icon: <Sparkles />, run: () => go('/ask') },

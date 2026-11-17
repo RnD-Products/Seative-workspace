@@ -4,7 +4,7 @@ import { Shortcuts } from './shortcuts';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { FolderKanban, Keyboard, LayoutDashboard, ListChecks, LogOut, Menu, Plus, Search, Settings, Sparkles, Users, X } from 'lucide-react';
+import { BarChart3, FolderKanban, Keyboard, LayoutDashboard, ListChecks, LogOut, Menu, Plus, Search, Settings, Sparkles, Users, X } from 'lucide-react';
 import { cn, APP_NAME } from '@/lib/utils';
 import { ROLE_LABEL } from '@/lib/domain';
 import type { Role, RunningTimer } from '@/lib/types';
@@ -74,6 +74,11 @@ export function AppShell({ user, orgName, projects, canCreate, timer, children }
             <Icon className={cn('size-4 opacity-70 group-hover:opacity-100', isActive(href) && 'text-primary opacity-100 drop-shadow-[0_0_6px_var(--primary)]')} aria-hidden /> {label}
           </Link>
         ))}
+        {canCreate && (
+          <Link href="/reports" aria-current={pathname.startsWith('/reports') ? 'page' : undefined} className={navItem(pathname.startsWith('/reports'))}>
+            <BarChart3 className={cn('size-4 opacity-70 group-hover:opacity-100', pathname.startsWith('/reports') && 'text-primary opacity-100 drop-shadow-[0_0_6px_var(--primary)]')} aria-hidden /> Reports
+          </Link>
+        )}
         <Link href="/ask" aria-current={pathname === '/ask' ? 'page' : undefined} className={navItem(pathname === '/ask')}>
           <Sparkles className="size-4 text-ai" aria-hidden /> Ask about work
         </Link>
