@@ -1,6 +1,7 @@
 'use client';
+import { toast } from '@/components/ui/toast';
 import Link from 'next/link';
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { ListChecks } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { NativeSelect } from '@/components/ui/input';
@@ -12,25 +13,33 @@ import { projectColor } from '@/lib/colors';
 import type { Profile, Task, TaskStatus } from '@/lib/types';
 import { updateTaskStatus } from '@/app/actions/tasks';
 import { canManageRef, type Me, type ProjectRef } from './types';
+import { QuickAdd, type QuickAddConfig } from './quick-add';
 
 function useTaskState(initial: Task[]) {
   const [tasks, setTasks] = useState(initial);
   const [error, setError] = useState<string | null>(null);
   const [, start] = useTransition();
+  const latest = useRef(tasks);
+  latest.current = tasks;
   useEffect(() => setTasks(initial), [initial]);
-  const move = (id: string, status: TaskStatus) => {
-    const before = tasks;
+  const move = (id: string, status: TaskStatus, undoable = true) => {
+    const before = latest.current;
+    const prev = before.find((t) => t.id === id)?.status;
+    if (!prev || prev === status) return;
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, status } : t))); // optimistic
     setError(null);
     start(async () => {
       const res = await updateTaskStatus(id, status);
-      if (!res.ok) { setTasks(before); setError(res.error); }
+      if (!res.ok) { setTasks(before); toast.error(res.error); return; }
+      const title = before.find((t) => t.id === id)?.title ?? 'Task';
+      toast(status === 'done' ? `“${title}” marked done` : `“${title}” moved to ${TASK_STATUS_LABEL[status]}`,
+        undoable ? { action: { label: 'Undo', run: () => move(id, prev, false) } } : {});
     });
   };
   return { tasks, move, error };
 }
 
-export function TaskViews({ view, tasks: initial, projects, people, me, showProject = true, emptyTitle, emptyDescription, emptyAction }: {
+export function TaskViews({ view, tasks: initial, projects, people, me, showProject = true, emptyTitle, emptyDescription, emptyAction, quickAdd }: {
   view: 'list' | 'board';
   tasks: Task[];
   projects: ProjectRef[];
@@ -40,6 +49,8 @@ export function TaskViews({ view, tasks: initial, projects, people, me, showProj
   emptyTitle?: string;
   emptyDescription?: string;
   emptyAction?: React.ReactNode;
+  /** When set, an inline "add a task" row appears (project pages). */
+  quickAdd?: QuickAddConfig;
 }) {
   const { tasks, move, error } = useTaskState(initial);
   const projectMap = new Map(projects.map((p) => [p.id, p]));
@@ -47,14 +58,19 @@ export function TaskViews({ view, tasks: initial, projects, people, me, showProj
   const canEdit = (t: Task) => t.assignee_id === me.id || canManageRef(projectMap.get(t.project_id), me);
 
   if (!tasks.length) {
-    return <Card><EmptyState icon={ListChecks} title={emptyTitle ?? 'No tasks match'} description={emptyDescription ?? 'Try changing the filters.'} action={emptyAction} /></Card>;
+    return (
+      <Card>
+        <EmptyState icon={ListChecks} title={emptyTitle ?? 'No tasks match'} description={emptyDescription ?? 'Try changing the filters.'} action={emptyAction} />
+        {quickAdd && <div className="border-t"><QuickAdd config={quickAdd} /></div>}
+      </Card>
+    );
   }
 
   return (
     <div className="space-y-3">
       {error && <Alert tone="error">{error}</Alert>}
       {view === 'board' ? (
-        <Board tasks={tasks} move={move} canEdit={canEdit} projectMap={projectMap} peopleMap={peopleMap} showProject={showProject} />
+        <Board tasks={tasks} move={move} canEdit={canEdit} projectMap={projectMap} peopleMap={peopleMap} showProject={showProject} quickAdd={quickAdd} />
       ) : (
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
@@ -74,7 +90,7 @@ export function TaskViews({ view, tasks: initial, projects, people, me, showProj
                   const assignee = t.assignee_id ? peopleMap.get(t.assignee_id) : null;
                   return (
                     <tr key={t.id} className="group transition-colors hover:bg-foreground/[0.025]">
-                      <td className="py-2 pl-4 pr-2"><Link href={`/tasks/${t.id}`} className="flex items-center gap-2.5 font-medium"><StatusIcon status={t.status} /><span className="truncate group-hover:text-foreground">{t.title}</span></Link></td>
+                      <td className="py-2 pl-4 pr-2"><span className="flex items-center gap-2.5"><DoneToggle task={t} editable={canEdit(t)} move={move} /><Link href={`/tasks/${t.id}`} className="truncate font-medium group-hover:text-foreground">{t.title}</Link></span></td>
                       {showProject && <td className="py-2 text-muted-foreground"><span className="flex items-center gap-2"><span aria-hidden className="size-2 shrink-0 rounded-[2px]" style={{ background: projectColor(t.project_id) }} /><span className="truncate">{projectMap.get(t.project_id)?.name ?? '—'}</span></span></td>}
                       <td className="py-2"><span className="flex items-center gap-2"><Avatar person={assignee} /><span className="truncate text-foreground/85">{assignee?.full_name ?? 'Unassigned'}</span></span></td>
                       <td className="py-2"><span className="flex items-center gap-1.5 text-foreground/85"><PriorityIcon priority={t.priority} />{PRIORITY_LABEL[t.priority]}</span></td>
@@ -90,15 +106,16 @@ export function TaskViews({ view, tasks: initial, projects, people, me, showProj
               </tbody>
             </table>
           </div>
+          {quickAdd && <div className="border-t"><QuickAdd config={quickAdd} /></div>}
         </Card>
       )}
     </div>
   );
 }
 
-function Board({ tasks, move, canEdit, projectMap, peopleMap, showProject }: {
+function Board({ tasks, move, canEdit, projectMap, peopleMap, showProject, quickAdd }: {
   tasks: Task[]; move: (id: string, s: TaskStatus) => void; canEdit: (t: Task) => boolean;
-  projectMap: Map<string, ProjectRef>; peopleMap: Map<string, Profile>; showProject: boolean;
+  projectMap: Map<string, ProjectRef>; peopleMap: Map<string, Profile>; showProject: boolean; quickAdd?: QuickAddConfig;
 }) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [over, setOver] = useState<TaskStatus | null>(null);
@@ -151,10 +168,25 @@ function Board({ tasks, move, canEdit, projectMap, peopleMap, showProject }: {
                 );
               })}
             </ul>
-            {list.length === 0 && <p className="px-1.5 py-6 text-center text-xs text-muted-foreground">No tasks</p>}
+            {list.length === 0 && !quickAdd && <p className="px-1.5 py-6 text-center text-xs text-muted-foreground">No tasks</p>}
+            {quickAdd && <QuickAdd config={quickAdd} status={col} compact className="mt-1.5" />}
           </section>
         );
       })}
     </div>
+  );
+}
+
+/** The status mark doubles as a checkbox: click to mark done (or reopen). */
+function DoneToggle({ task, editable, move }: { task: Task; editable: boolean; move: (id: string, s: TaskStatus) => void }) {
+  if (!editable) return <StatusIcon status={task.status} />;
+  const done = task.status === 'done';
+  return (
+    <button type="button" onClick={() => move(task.id, done ? 'todo' : 'done')}
+      title={done ? 'Reopen task' : 'Mark as done'} aria-label={done ? `Reopen ${task.title}` : `Mark ${task.title} as done`}
+      className="group/done relative grid size-5 shrink-0 place-items-center rounded-full transition-transform hover:scale-110 active:scale-95">
+      <StatusIcon status={task.status} className={cn(!done && 'group-hover/done:opacity-0')} />
+      {!done && <StatusIcon status="done" className="absolute opacity-0 transition-opacity group-hover/done:opacity-60" />}
+    </button>
   );
 }

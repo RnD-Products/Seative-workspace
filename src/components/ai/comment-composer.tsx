@@ -1,4 +1,5 @@
 'use client';
+import { toast } from '@/components/ui/toast';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sparkles } from 'lucide-react';
@@ -19,12 +20,21 @@ export function CommentComposer({ taskId, aiEnabled, defaultProgress }: { taskId
   const [error, setError] = useState<string | null>(null);
   const [posting, startPost] = useTransition();
   const [drafting, startDraft] = useTransition();
+  const post = () => {
+    if (posting || !body.trim()) return;
+    startPost(async () => {
+      setError(null);
+      const res = await addComment({ task_id: taskId, body, is_progress_update: progress, ai_assisted: aiUsed });
+      if (!res.ok) setError(res.error); else { toast(progress ? 'Progress update posted' : 'Comment posted'); setBody(''); setAiUsed(false); router.refresh(); }
+    });
+  };
 
   return (
     <div className="space-y-2">
       <Label htmlFor="comment" className="sr-only">Add a comment or progress update</Label>
       <Textarea id="comment" rows={4} value={body} maxLength={5000}
         onChange={(e) => setBody(e.target.value)}
+        onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); post(); } }}
         placeholder={aiEnabled ? 'Write a comment — or jot rough notes and click “Draft update with AI”.' : 'Write a comment or progress update…'} />
       {aiUsed && <p className="flex items-center gap-2 text-xs text-muted-foreground"><AiLabel>AI draft</AiLabel> Review and edit before posting. It will be marked as AI-assisted.</p>}
       {error && <Alert tone="error">{error}</Alert>}
@@ -41,11 +51,7 @@ export function CommentComposer({ taskId, aiEnabled, defaultProgress }: { taskId
                 if (!res.ok) setError(res.error); else { setBody(res.data!.update); setAiUsed(true); setProgress(true); }
               })}>{drafting ? <Spinner /> : <Sparkles />} Draft update with AI</Button>
           )}
-          <Button size="sm" disabled={posting || !body.trim()} onClick={() => startPost(async () => {
-            setError(null);
-            const res = await addComment({ task_id: taskId, body, is_progress_update: progress, ai_assisted: aiUsed });
-            if (!res.ok) setError(res.error); else { setBody(''); setAiUsed(false); router.refresh(); }
-          })}>{posting && <Spinner />} Post</Button>
+          <Button size="sm" disabled={posting || !body.trim()} onClick={post} title="Post (Ctrl/⌘ + Enter)">{posting && <Spinner />} Post</Button>
         </div>
       </div>
     </div>

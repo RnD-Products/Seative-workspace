@@ -3,9 +3,9 @@ import { notFound } from 'next/navigation';
 import { Sparkles } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, PriorityBadge, TaskStatusBadge } from '@/components/badges';
+import { Avatar, TaskStatusBadge } from '@/components/badges';
 import { ActivityFeed } from '@/components/work-items';
-import { DescriptionEditor, EditTaskDialog, StatusControl } from '@/components/tasks/task-detail-controls';
+import { DescriptionEditor, EditTaskDialog, StatusControl, TaskProperties, TitleEditor } from '@/components/tasks/task-detail-controls';
 import { isOwnTask } from '@/components/tasks/types';
 import { DeleteTaskButton } from '@/components/delete-buttons';
 import { TaskAssistant } from '@/components/ai/task-assistant';
@@ -13,7 +13,6 @@ import { CommentComposer } from '@/components/ai/comment-composer';
 import { requireSession } from '@/lib/session';
 import { byId, canManage, db, getTaskDetail, listProfiles } from '@/lib/queries';
 import { dueLabel, fmtDate, fmtRelative, isOverdue } from '@/lib/domain';
-import { cn } from '@/lib/utils';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -36,7 +35,6 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   const isAssignee = task.assignee_id === session.userId;
   const canEditStatus = manages || isAssignee;
   const canEditAll = manages || isOwnTask(task, session.profile);
-  const assignee = task.assignee_id ? peopleMap.get(task.assignee_id) : null;
   const creator = task.created_by ? peopleMap.get(task.created_by) : null;
   const ref = { id: project.id, name: project.name, manager_id: project.manager_id, memberIds: (members ?? []).map((m) => m.profile_id as string) };
   const aiEnabled = Boolean(process.env.ANTHROPIC_API_KEY);
@@ -45,7 +43,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
     <>
       <PageHeader
         back={<Link href={`/projects/${project.id}`} className="text-sm text-muted-foreground hover:text-foreground">← {project.name}</Link>}
-        title={task.title}
+        title={<TitleEditor taskId={task.id} title={task.title} canEdit={canEditAll} />}
         actions={canEditAll && (
           <>
             <EditTaskDialog taskId={task.id} projects={[ref]} people={people} me={session.profile} defaults={{
@@ -98,11 +96,14 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
           <Card>
             <CardContent className="space-y-4 pt-5 text-sm">
               {canEditStatus ? <StatusControl taskId={task.id} status={task.status} /> : <div><p className="text-xs text-muted-foreground">Status</p><div className="mt-1"><TaskStatusBadge status={task.status} /></div></div>}
-              <dl className="space-y-3">
-                <div><dt className="text-xs text-muted-foreground">Assignee</dt><dd className="mt-1 flex items-center gap-2 font-medium"><Avatar person={assignee} />{assignee?.full_name ?? 'Unassigned'}</dd></div>
-                <div><dt className="text-xs text-muted-foreground">Priority</dt><dd className="mt-1"><PriorityBadge priority={task.priority} /></dd></div>
-                <div><dt className="text-xs text-muted-foreground">Due</dt><dd className={cn('mt-1 font-medium', isOverdue(task) && 'text-destructive')}>{task.due_date ? (isOverdue(task) || dueLabel(task).startsWith('Due to') ? `${fmtDate(task.due_date)} · ${dueLabel(task)}` : fmtDate(task.due_date)) : 'No due date'}</dd></div>
-                <div><dt className="text-xs text-muted-foreground">Start</dt><dd className="mt-1">{fmtDate(task.start_date)}</dd></div>
+              <TaskProperties
+                task={{ id: task.id, priority: task.priority, assignee_id: task.assignee_id, due_date: task.due_date, start_date: task.start_date }}
+                people={people.filter((p) => ref.memberIds.includes(p.id) || p.id === project.manager_id || p.id === task.assignee_id)}
+                canEditFields={canEditAll}
+                canAssign={manages}
+              />
+              {isOverdue(task) && <p className="rounded-md bg-destructive-soft px-2.5 py-1.5 text-[12.5px] font-medium text-destructive">{dueLabel(task)}</p>}
+              <dl className="space-y-3 border-t pt-4">
                 <div><dt className="text-xs text-muted-foreground">Created by</dt><dd className="mt-1">{creator?.full_name ?? '—'} · {fmtDate(task.created_at.slice(0, 10))}</dd></div>
                 {task.completed_at && <div><dt className="text-xs text-muted-foreground">Completed</dt><dd className="mt-1">{fmtDate(task.completed_at.slice(0, 10))}</dd></div>}
               </dl>

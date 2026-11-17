@@ -1,4 +1,5 @@
 'use client';
+import { toast } from '@/components/ui/toast';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Trash2 } from 'lucide-react';
@@ -31,7 +32,7 @@ export function DeleteProjectButton({ id, name }: { id: string; name: string }) 
     <ConfirmDelete
       title={`Delete “${name}”?`}
       body="This permanently deletes the project with all of its tasks, comments and activity. This can't be undone."
-      onConfirm={async () => { const r = await deleteProject(id); return r && !r.ok ? r.error : null; }}
+      onConfirm={async () => { const r = await deleteProject(id); if (r && !r.ok) return r.error; toast(`Project “${name}” deleted`); return null; }}
     />
   );
 }
@@ -45,6 +46,7 @@ export function DeleteTaskButton({ id, projectId }: { id: string; projectId: str
       onConfirm={async () => {
         const r = await deleteTask(id);
         if (!r.ok) return r.error;
+        toast('Task deleted');
         router.push(`/projects/${projectId}`);
         return null;
       }}

@@ -1,8 +1,10 @@
 'use client';
+import { Toaster } from './ui/toast';
+import { Shortcuts } from './shortcuts';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { FolderKanban, LayoutDashboard, ListChecks, LogOut, Menu, Plus, Search, Settings, Sparkles, Users, X } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { FolderKanban, Keyboard, LayoutDashboard, ListChecks, LogOut, Menu, Plus, Search, Settings, Sparkles, Users, X } from 'lucide-react';
 import { cn, APP_NAME } from '@/lib/utils';
 import { ROLE_LABEL } from '@/lib/domain';
 import type { Role } from '@/lib/types';
@@ -27,6 +29,8 @@ export function AppShell({ user, orgName, projects, canCreate, children }: {
   const [open, setOpen] = useState(false);
   const [palette, setPalette] = useState(false);
   const [isMac, setIsMac] = useState(true);
+  const [help, setHelp] = useState(false);
+  const openSearch = useCallback(() => setPalette(true), []);
 
   useEffect(() => {
     setIsMac(/Mac|iPhone|iPad/.test(navigator.platform));
@@ -99,6 +103,9 @@ export function AppShell({ user, orgName, projects, canCreate, children }: {
           <p className="truncate text-[13px] font-medium text-ink-strong">{user.full_name}</p>
           <p className="truncate text-[11px] text-ink-foreground">{ROLE_LABEL[user.role]}</p>
         </div>
+        <button onClick={() => setHelp(true)} className="hidden size-7 place-items-center rounded-md text-ink-foreground hover:bg-foreground/[0.06] hover:text-ink-strong lg:grid" title="Keyboard shortcuts (?)">
+          <Keyboard className="size-4" aria-hidden /><span className="sr-only">Keyboard shortcuts</span>
+        </button>
         <ThemeToggle className="size-7" />
         <form action={signOut}>
           <button type="submit" className="grid size-7 place-items-center rounded-md text-ink-foreground hover:bg-foreground/[0.06] hover:text-ink-strong" title="Sign out">
@@ -143,6 +150,8 @@ export function AppShell({ user, orgName, projects, canCreate, children }: {
         </main>
       </div>
 
+      <Toaster />
+      <Shortcuts onSearch={openSearch} helpOpen={help} setHelpOpen={setHelp} isMac={isMac} />
       <CommandPalette open={palette} onOpenChange={setPalette} projects={projects} canCreate={canCreate} />
     </div>
   );

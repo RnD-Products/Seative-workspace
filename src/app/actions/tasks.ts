@@ -117,3 +117,28 @@ export async function addComment(input: unknown): Promise<ActionResult> {
   revalidatePath('/');
   return { ok: true };
 }
+
+const fieldsSchema = z.object({
+  title: z.string().trim().min(1, 'Title is required').max(200).optional(),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
+  assignee_id: z.string().uuid().nullable().optional(),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+}).refine((v) => Object.keys(v).length > 0, 'Nothing to update');
+
+/** Inline edit of one or more task fields. The database decides who may change what. */
+export async function updateTaskFields(id: string, input: unknown): Promise<ActionResult> {
+  await requireSession();
+  if (!z.string().uuid().safeParse(id).success) return { ok: false, error: 'Invalid task' };
+  const parsed = fieldsSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Invalid update' };
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('tasks').update(parsed.data).eq('id', id).select('project_id');
+  if (error) {
+    if (/task_dates/.test(error.message)) return { ok: false, error: 'The due date must be on or after the start date.' };
+    return { ok: false, error: friendly(error.message) };
+  }
+  if (!data?.length) return { ok: false, error: "You don't have permission to edit this task." };
+  revalidateTask(data[0].project_id, id);
+  return { ok: true };
+}
