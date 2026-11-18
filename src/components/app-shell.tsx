@@ -58,14 +58,14 @@ export function AppShell({ user, orgName, projects, canCreate, timer, unread, in
 
   const navItem = (active: boolean) => cn(
     'group flex h-8 items-center gap-2.5 rounded-md px-2 text-[13px] font-medium text-ink-foreground transition-colors duration-150 hover:bg-foreground/[0.05] hover:text-ink-strong active:bg-foreground/[0.08]',
-    active && 'bg-foreground/[0.07] text-ink-strong shadow-[inset_0_1px_0_var(--edge),0_0_0_1px_var(--border)]',
+    active && 'bg-foreground/[0.06] text-ink-strong',
   );
 
   const sidebar = (
     <div className="flex h-full flex-col gap-5 bg-shell px-2.5 pb-3 pt-3">
       <div className="flex items-center gap-1">
         <Link href="/" className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1.5 py-1 hover:bg-foreground/[0.05]">
-          <span aria-hidden className="glow-primary grid size-[22px] shrink-0 place-items-center rounded-[6px] text-[12px] font-bold text-white">S</span>
+          <span aria-hidden className="grid size-[22px] shrink-0 place-items-center rounded-[6px] border border-border-strong bg-card text-[12px] font-semibold text-ink-strong">S</span>
           <span className="truncate text-[13px] font-semibold text-ink-strong">{orgName}</span>
         </Link>
         <NotificationsBell initialUnread={unread} />
@@ -82,8 +82,8 @@ export function AppShell({ user, orgName, projects, canCreate, timer, unread, in
       <nav aria-label="Main" className="flex flex-col gap-px">
         {nav.map(({ href, label, icon: Icon, badge, tone }) => (
           <Link key={href} href={href} aria-current={isActive(href) ? 'page' : undefined} className={navItem(isActive(href))}>
-            <Icon className={cn('size-4 opacity-70 group-hover:opacity-100', isActive(href) && 'text-primary opacity-100 drop-shadow-[0_0_6px_var(--primary)]')} aria-hidden /> {label}
-            {badge ? <span className={cn('ml-auto rounded-full px-1.5 text-[11px] font-semibold leading-[18px] text-white', tone === 'red' ? 'bg-destructive/90 shadow-[0_0_8px_var(--destructive)]' : tone === 'primary' ? 'bg-primary shadow-[0_0_8px_var(--primary)]' : 'bg-deadline/90 shadow-[0_0_8px_var(--deadline)]')}>{badge}</span> : null}
+            <Icon className={cn('size-4 opacity-60 group-hover:opacity-100', isActive(href) && 'opacity-100')} aria-hidden /> {label}
+            {badge ? <span className={cn('ml-auto min-w-[18px] rounded-[4px] px-1 text-center font-mono text-[11px] font-medium leading-[18px]', tone === 'red' ? 'bg-destructive-soft text-destructive' : tone === 'primary' ? 'bg-ai-soft text-ai' : 'bg-primary-soft text-[#e88a69]')}>{badge}</span> : null}
           </Link>
         ))}
 {user.role !== 'sales' && (
@@ -95,7 +95,7 @@ export function AppShell({ user, orgName, projects, canCreate, timer, unread, in
 
       {projects.length > 0 ? (
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <p className="px-2 pb-1 text-[11px] font-medium text-ink-foreground/80">Projects</p>
+          <p className="px-2 pb-1 text-[11px] text-ink-foreground/70">Projects</p>
           <ul className="flex flex-col gap-px">
             {projects.slice(0, 10).map((p) => {
               const here = pathname === `/projects/${p.id}`;
@@ -155,7 +155,7 @@ export function AppShell({ user, orgName, projects, canCreate, timer, unread, in
             <Menu className="size-4" />
           </button>
           <span className="flex items-center gap-2 text-[13px] font-semibold">
-            <span aria-hidden className="grid size-5 place-items-center rounded-[5px] bg-primary text-[11px] font-bold text-white">S</span>{APP_NAME}
+            <span aria-hidden className="grid size-5 place-items-center rounded-[5px] border border-border-strong bg-card text-[11px] font-semibold">S</span>{APP_NAME}
           </span>
           <div className="ml-auto flex items-center gap-1">
             {timer && <RunningTimerPill timer={timer} compact />}

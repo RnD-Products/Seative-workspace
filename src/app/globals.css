@@ -1,102 +1,101 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/inter';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Seative Workspace — "quiet console"
- * Dark-first, dense and calm: near-black shell, the work in an inset panel,
- * hairline borders instead of shadows, one accent (indigo) for actions and selection.
- * Status colours keep one meaning everywhere: gray=to do, blue=in progress, amber=review, green=done, red=overdue.
+ * Seative Workspace — "ledger" (Factura-inspired)
+ * Near-black, quiet and precise: hairline borders, Geist type, Geist Mono for numbers and IDs.
+ * Two accents with fixed jobs: rust = human actions (primary buttons, selection),
+ * blue = system and AI (assistant, live states, progress). Status colours keep one meaning everywhere.
  *
- * Layers (dark):  shell #0a0a0c  ·  panel #101012  ·  raised #16161a  ·  hover #1c1c21
+ * Layers (dark):  shell #08090a  ·  panel #0c0d0e  ·  card #0f1011  ·  overlay #1a1b1e
  */
 :root {
-  --shell: #f4f4f6;
-  --background: #ffffff;
-  --foreground: #1c1d21;
+  --shell: #f3f2f6;
+  --background: #fbfbfc;
+  --foreground: #16171a;
   --card: #ffffff;
-  --raised: #fafafb;
-  --muted: #f2f2f4;
-  --muted-foreground: #6b6f7a;
-  --border: #e7e7ea;
-  --border-strong: #d9d9de;
-  --input: #dcdce1;
-  --primary: #5862e6;
-  --primary-hover: #4a54d6;
+  --raised: #f7f6f9;
+  --muted: #efeef2;
+  --muted-foreground: #6a6b74;
+  --border: #e6e5ea;
+  --border-strong: #d6d5dc;
+  --input: #d9d8de;
+  --primary: #ba5539;
+  --primary-hover: #a44a31;
   --primary-foreground: #ffffff;
-  --primary-soft: #eef0ff;
-  --deadline: #b9700c;
-  --deadline-soft: #fdf3e2;
-  --destructive: #d23f4f;
-  --destructive-soft: #fdecee;
-  --success: #1d8a50;
-  --success-soft: #e6f5ec;
-  --warning: #b07209;
-  --warning-soft: #fdf3dd;
-  --info: #2f6fd6;
-  --info-soft: #e8f0fd;
-  --ai: #8250df;
-  --ai-soft: #f3edfd;
-  --ink: #f4f4f6;
-  --ink-2: #ebebee;
-  --ink-foreground: #5c606b;
-  --ink-strong: #1c1d21;
-  --ring: #5862e6;
-  --shadow-lift: 0 0 0 1px rgb(0 0 0 / 0.04), 0 8px 24px -8px rgb(0 0 0 / 0.16);
-  --chart-grid: #ececef;
-  --chart-axis: #7a7e89;
-  --glow-a: rgb(88 98 230 / 0.14);
-  --glow-b: rgb(168 85 247 / 0.10);
+  --primary-soft: #f8ebe6;
+  --deadline: #b3780e;
+  --deadline-soft: #fbf1dc;
+  --destructive: #d24b3c;
+  --destructive-soft: #fcebe8;
+  --success: #1f8f5c;
+  --success-soft: #e4f4ec;
+  --warning: #b3780e;
+  --warning-soft: #fbf1dc;
+  --info: #3d5fe0;
+  --info-soft: #ebefff;
+  --ai: #3d5fe0;
+  --ai-soft: #ebefff;
+  --ink: #f3f2f6;
+  --ink-2: #eae9ee;
+  --ink-foreground: #5d5e67;
+  --ink-strong: #16171a;
+  --ring: #6f8fff;
+  --shadow-lift: 0 0 0 1px rgb(0 0 0 / 0.05), 0 10px 30px -10px rgb(0 0 0 / 0.18);
+  --chart-grid: #ebeaef;
+  --chart-axis: #7a7b84;
+  --glow-a: rgb(111 143 255 / 0.10);
+  --glow-b: rgb(186 85 57 / 0.08);
   --edge: rgb(255 255 255 / 0.9);
-  --card-sheen: linear-gradient(180deg, rgb(255 255 255 / 0.7), rgb(255 255 255 / 0));
+  --card-sheen: none;
 }
 
 .dark {
-  --shell: #0a0a0c;
-  --background: #101012;
-  --foreground: #e8e8ea;
-  --card: #141417;
-  --raised: #18181c;
-  --muted: #1c1c21;
-  --muted-foreground: #8b8e98;
-  --border: rgb(255 255 255 / 0.07);
-  --border-strong: rgb(255 255 255 / 0.12);
-  --input: rgb(255 255 255 / 0.10);
-  --primary: #6b74f0;
-  --primary-hover: #7c84f4;
+  --shell: #08090a;
+  --background: #0c0d0e;
+  --foreground: #f5f4fa;
+  --card: #0f1011;
+  --raised: #141517;
+  --muted: #1a1b1e;
+  --muted-foreground: rgb(245 244 250 / 0.62);
+  --border: rgb(255 255 255 / 0.08);
+  --border-strong: rgb(255 255 255 / 0.16);
+  --input: rgb(255 255 255 / 0.12);
+  --primary: #ba5539;
+  --primary-hover: #c9603f;
   --primary-foreground: #ffffff;
-  --primary-soft: rgb(107 116 240 / 0.14);
-  --deadline: #e9a542;
-  --deadline-soft: rgb(233 165 66 / 0.12);
-  --destructive: #f0616f;
-  --destructive-soft: rgb(240 97 111 / 0.12);
-  --success: #45c27a;
-  --success-soft: rgb(69 194 122 / 0.12);
-  --warning: #e7b14a;
-  --warning-soft: rgb(231 177 74 / 0.12);
-  --info: #5fa2f7;
-  --info-soft: rgb(95 162 247 / 0.12);
-  --ai: #ad8cf5;
-  --ai-soft: rgb(173 140 245 / 0.12);
-  --ink: #0a0a0c;
-  --ink-2: #131316;
-  --ink-foreground: #8b8e98;
-  --ink-strong: #e8e8ea;
-  --ring: #7c84f4;
-  --shadow-lift: 0 0 0 1px rgb(255 255 255 / 0.06), 0 16px 40px -12px rgb(0 0 0 / 0.7);
+  --primary-soft: rgb(186 85 57 / 0.14);
+  --deadline: #f0b13f;
+  --deadline-soft: rgb(240 177 63 / 0.12);
+  --destructive: #f2705f;
+  --destructive-soft: rgb(242 112 95 / 0.13);
+  --success: #4cc38a;
+  --success-soft: rgb(76 195 138 / 0.12);
+  --warning: #f0b13f;
+  --warning-soft: rgb(240 177 63 / 0.12);
+  --info: #a9bcff;
+  --info-soft: rgb(111 143 255 / 0.14);
+  --ai: #a9bcff;
+  --ai-soft: rgb(111 143 255 / 0.14);
+  --ink: #08090a;
+  --ink-2: #0f1011;
+  --ink-foreground: rgb(245 244 250 / 0.62);
+  --ink-strong: #f5f4fa;
+  --ring: #9ec2ff;
+  --shadow-lift: 0 0 0 1px rgb(255 255 255 / 0.08), 0 18px 44px -14px rgb(0 0 0 / 0.8);
   --chart-grid: rgb(255 255 255 / 0.06);
-  --chart-axis: #8b8e98;
-  --glow-a: rgb(107 116 240 / 0.32);
-  --glow-b: rgb(168 85 247 / 0.20);
-  --edge: rgb(255 255 255 / 0.06);
-  --card-sheen: linear-gradient(180deg, rgb(255 255 255 / 0.035), rgb(255 255 255 / 0) 42%);
+  --chart-axis: rgb(245 244 250 / 0.42);
+  --glow-a: rgb(111 143 255 / 0.16);
+  --glow-b: rgb(186 85 57 / 0.13);
+  --edge: rgb(255 255 255 / 0.05);
+  --card-sheen: none;
   color-scheme: dark;
 }
 
 @theme inline {
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --color-shell: var(--shell);
@@ -167,8 +166,7 @@
   body {
     @apply bg-shell text-foreground;
     font-size: 14px;
-    letter-spacing: -0.006em;
-    font-feature-settings: 'cv01', 'cv02', 'cv03', 'cv04', 'ss03';
+    letter-spacing: -0.003em;
   }
   :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
   ::selection { background: color-mix(in oklab, var(--primary) 30%, transparent); }
@@ -180,29 +178,39 @@
 @layer utilities {
   .chat-frame { height: calc(100dvh - 6.75rem); grid-template-rows: minmax(0, 1fr); }
   @media (min-width: 1024px) { .chat-frame { height: calc(100dvh - 3.5rem); } }
-  /* Glow layer — ambient light, lit edges, glowing actions. */
+  /* Ambient light: cool blue from the left, warm rust from the right, over a faint ledger grid. */
   .ambient {
     background:
-      radial-gradient(1000px 480px at 15% -10%, var(--glow-a), transparent 62%),
-      radial-gradient(800px 420px at 95% -14%, var(--glow-b), transparent 62%),
-      radial-gradient(600px 300px at 50% 110%, color-mix(in oklab, var(--glow-a) 45%, transparent), transparent 70%),
+      radial-gradient(900px 420px at 0% -12%, var(--glow-a), transparent 60%),
+      radial-gradient(900px 420px at 100% -12%, var(--glow-b), transparent 60%),
       var(--background);
     background-attachment: local;
     position: relative;
   }
   .ambient::before {
     content: ''; position: absolute; inset: 0 0 auto 0; height: 1px; pointer-events: none; z-index: 40;
-    background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--primary) 70%, transparent) 30%, color-mix(in oklab, #a78bfa 70%, transparent) 70%, transparent);
+    background: linear-gradient(90deg, transparent, rgb(111 143 255 / 0.55) 25%, rgb(255 255 255 / 0.25) 50%, rgb(186 85 57 / 0.6) 75%, transparent);
   }
-  .sheen { background-image: var(--card-sheen); box-shadow: inset 0 1px 0 var(--edge); }
-  .glow-primary {
-    background-image: linear-gradient(180deg, color-mix(in oklab, var(--primary) 82%, white), var(--primary));
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 0 0 1px color-mix(in oklab, var(--primary) 70%, black), 0 4px 18px -4px color-mix(in oklab, var(--primary) 70%, transparent);
+  .grid-bg {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+    background-size: 48px 48px;
   }
-  .glow-primary:hover { box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.28), 0 0 0 1px color-mix(in oklab, var(--primary) 70%, black), 0 6px 26px -4px color-mix(in oklab, var(--primary) 85%, transparent); }
-  .glow-ring:hover { box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 35%, transparent), 0 8px 30px -10px color-mix(in oklab, var(--primary) 55%, transparent); }
-  .text-gradient { background: linear-gradient(180deg, var(--foreground), color-mix(in oklab, var(--foreground) 55%, transparent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .bar-glow { background-image: linear-gradient(90deg, var(--primary), #a78bfa); box-shadow: 0 0 10px -1px color-mix(in oklab, var(--primary) 80%, transparent); }
+  :root:not(.dark) .grid-bg {
+    background-image:
+      linear-gradient(to right, rgb(0 0 0 / 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(0 0 0 / 0.04) 1px, transparent 1px);
+  }
+  .sheen { box-shadow: inset 0 1px 0 var(--edge); }
+  /* Primary action: flat rust with a thin top highlight (no gradients, no bloom). */
+  .glow-primary { background-color: var(--primary); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 0 0 1px color-mix(in oklab, var(--primary) 80%, black); }
+  .glow-primary:hover { background-color: var(--primary-hover); }
+  .glow-ring:hover { border-color: var(--border-strong); background-color: color-mix(in oklab, var(--card) 92%, white 8%); }
+  :root:not(.dark) .glow-ring:hover { background-color: var(--raised); }
+  .text-gradient { color: var(--foreground); }
+  .bar-glow { background-color: #6f8fff; }
+  .label-mono { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.02em; color: var(--muted-foreground); }
   /* Children rise in one after another on first paint. */
   .stagger > * { animation: var(--animate-rise-in); }
   .stagger > :nth-child(2) { animation-delay: 35ms; }
@@ -220,7 +228,8 @@
   .press:active { transform: scale(0.97); }
   .lift { transition: transform 180ms var(--ease-out-quint), border-color 150ms, background-color 150ms; }
   .lift:hover { transform: translateY(-1px); }
-  .font-display { font-family: var(--font-display); letter-spacing: -0.02em; }
+  .font-display { font-family: var(--font-display); letter-spacing: -0.025em; }
+  .tabular, .font-num { font-variant-numeric: tabular-nums; }
   .tabular { font-variant-numeric: tabular-nums; }
   .select-chevron {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b8e98' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");

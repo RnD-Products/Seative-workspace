@@ -34,7 +34,7 @@ export function WeekStrip({ tasks, projectNames, title }: {
         {/* Overdue column */}
         <div className="border-b p-3 md:border-b-0 md:border-r">
           <p className="text-[12px] font-medium text-destructive">Overdue</p>
-          <p className={cn('mt-1 text-[26px] font-semibold leading-none tracking-[-0.03em] tabular', overdue.length ? 'text-destructive' : 'text-muted-foreground')}>{overdue.length}</p>
+          <p className={cn('mt-1 text-[26px] font-normal tracking-[-0.03em] leading-none tracking-[-0.03em] tabular', overdue.length ? 'text-destructive' : 'text-muted-foreground')}>{overdue.length}</p>
           <ul className="mt-2 space-y-1">
             {overdue.slice(0, 3).map((t) => (
               <li key={t.id}><Link href={`/tasks/${t.id}`} className="block truncate text-[13px] text-foreground/85 hover:underline">{t.title}</Link></li>
@@ -54,7 +54,7 @@ export function WeekStrip({ tasks, projectNames, title }: {
                 <span className={cn('text-xs font-medium', isToday ? 'text-primary' : 'text-muted-foreground')}>{isToday ? 'Today' : format(d, 'EEE')}</span>
                 {off && <span className="text-[11px] text-muted-foreground">Off</span>}
               </div>
-              <p className={cn('text-[22px] font-semibold leading-tight tracking-[-0.03em] tabular', isToday ? 'text-primary' : off ? 'text-muted-foreground/60' : '')}>{format(d, 'd')}</p>
+              <p className={cn('text-[22px] font-normal tracking-[-0.03em] leading-tight tracking-[-0.03em] tabular', isToday ? 'text-primary' : off ? 'text-muted-foreground/60' : '')}>{format(d, 'd')}</p>
               <ul className="min-w-0 flex-1 space-y-1 md:mt-1.5">
                 {due.slice(0, 3).map((t) => (
                   <li key={t.id}>
