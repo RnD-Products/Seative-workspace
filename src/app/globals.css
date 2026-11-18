@@ -1,101 +1,102 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/inter';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Seative Workspace — "ledger" (Factura-inspired)
- * Near-black, quiet and precise: hairline borders, Geist type, Geist Mono for numbers and IDs.
- * Two accents with fixed jobs: rust = human actions (primary buttons, selection),
- * blue = system and AI (assistant, live states, progress). Status colours keep one meaning everywhere.
+ * Seative Workspace — "deck" (AturnDeck-inspired)
+ * Soft charcoal greys instead of pure black, rounded panels, roomy cards,
+ * a neutral (white) primary action and colour reserved for meaning:
+ * priority chips, status, project badges. Blue marks live/AI states.
  *
- * Layers (dark):  shell #08090a  ·  panel #0c0d0e  ·  card #0f1011  ·  overlay #1a1b1e
+ * Layers (dark):  shell #171717  ·  page #1b1b1b  ·  panel #212121  ·  card #262626  ·  hover #2e2e2e
  */
 :root {
-  --shell: #f3f2f6;
-  --background: #fbfbfc;
-  --foreground: #16171a;
+  --shell: #f1f1f2;
+  --background: #f7f7f8;
+  --foreground: #18181a;
   --card: #ffffff;
-  --raised: #f7f6f9;
-  --muted: #efeef2;
-  --muted-foreground: #6a6b74;
-  --border: #e6e5ea;
-  --border-strong: #d6d5dc;
-  --input: #d9d8de;
-  --primary: #ba5539;
-  --primary-hover: #a44a31;
+  --raised: #f4f4f5;
+  --muted: #ececee;
+  --muted-foreground: #6b6b72;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --input: #d9d9de;
+  --primary: #18181a;
+  --primary-hover: #2c2c30;
   --primary-foreground: #ffffff;
-  --primary-soft: #f8ebe6;
-  --deadline: #b3780e;
-  --deadline-soft: #fbf1dc;
-  --destructive: #d24b3c;
-  --destructive-soft: #fcebe8;
-  --success: #1f8f5c;
-  --success-soft: #e4f4ec;
-  --warning: #b3780e;
-  --warning-soft: #fbf1dc;
-  --info: #3d5fe0;
-  --info-soft: #ebefff;
-  --ai: #3d5fe0;
-  --ai-soft: #ebefff;
-  --ink: #f3f2f6;
-  --ink-2: #eae9ee;
-  --ink-foreground: #5d5e67;
-  --ink-strong: #16171a;
-  --ring: #6f8fff;
-  --shadow-lift: 0 0 0 1px rgb(0 0 0 / 0.05), 0 10px 30px -10px rgb(0 0 0 / 0.18);
-  --chart-grid: #ebeaef;
-  --chart-axis: #7a7b84;
-  --glow-a: rgb(111 143 255 / 0.10);
-  --glow-b: rgb(186 85 57 / 0.08);
+  --primary-soft: #ececee;
+  --deadline: #b06d00;
+  --deadline-soft: #fdf1dc;
+  --destructive: #d43f3a;
+  --destructive-soft: #fdeceb;
+  --success: #198a4b;
+  --success-soft: #e3f5ea;
+  --warning: #b06d00;
+  --warning-soft: #fdf1dc;
+  --info: #2f73e0;
+  --info-soft: #e8f0fd;
+  --ai: #2f73e0;
+  --ai-soft: #e8f0fd;
+  --ink: #f1f1f2;
+  --ink-2: #e8e8ea;
+  --ink-foreground: #63636a;
+  --ink-strong: #18181a;
+  --ring: #3b82f6;
+  --shadow-lift: 0 0 0 1px rgb(0 0 0 / 0.05), 0 12px 32px -12px rgb(0 0 0 / 0.2);
+  --chart-grid: #e8e8ea;
+  --chart-axis: #7a7a82;
+  --glow-a: transparent;
+  --glow-b: transparent;
   --edge: rgb(255 255 255 / 0.9);
   --card-sheen: none;
 }
 
 .dark {
-  --shell: #08090a;
-  --background: #0c0d0e;
-  --foreground: #f5f4fa;
-  --card: #0f1011;
-  --raised: #141517;
-  --muted: #1a1b1e;
-  --muted-foreground: rgb(245 244 250 / 0.62);
-  --border: rgb(255 255 255 / 0.08);
-  --border-strong: rgb(255 255 255 / 0.16);
-  --input: rgb(255 255 255 / 0.12);
-  --primary: #ba5539;
-  --primary-hover: #c9603f;
-  --primary-foreground: #ffffff;
-  --primary-soft: rgb(186 85 57 / 0.14);
-  --deadline: #f0b13f;
-  --deadline-soft: rgb(240 177 63 / 0.12);
-  --destructive: #f2705f;
-  --destructive-soft: rgb(242 112 95 / 0.13);
-  --success: #4cc38a;
-  --success-soft: rgb(76 195 138 / 0.12);
-  --warning: #f0b13f;
-  --warning-soft: rgb(240 177 63 / 0.12);
-  --info: #a9bcff;
-  --info-soft: rgb(111 143 255 / 0.14);
-  --ai: #a9bcff;
-  --ai-soft: rgb(111 143 255 / 0.14);
-  --ink: #08090a;
-  --ink-2: #0f1011;
-  --ink-foreground: rgb(245 244 250 / 0.62);
-  --ink-strong: #f5f4fa;
-  --ring: #9ec2ff;
-  --shadow-lift: 0 0 0 1px rgb(255 255 255 / 0.08), 0 18px 44px -14px rgb(0 0 0 / 0.8);
-  --chart-grid: rgb(255 255 255 / 0.06);
-  --chart-axis: rgb(245 244 250 / 0.42);
-  --glow-a: rgb(111 143 255 / 0.16);
-  --glow-b: rgb(186 85 57 / 0.13);
-  --edge: rgb(255 255 255 / 0.05);
+  --shell: #171717;
+  --background: #1b1b1b;
+  --foreground: #f2f2f2;
+  --card: #242424;
+  --raised: #2a2a2a;
+  --muted: #2e2e2e;
+  --muted-foreground: #9b9b9b;
+  --border: #2e2e2e;
+  --border-strong: #3a3a3a;
+  --input: #3a3a3a;
+  --primary: #f2f2f2;
+  --primary-hover: #ffffff;
+  --primary-foreground: #161616;
+  --primary-soft: rgb(255 255 255 / 0.08);
+  --deadline: #e9b949;
+  --deadline-soft: rgb(233 185 73 / 0.14);
+  --destructive: #f26d6d;
+  --destructive-soft: rgb(242 109 109 / 0.14);
+  --success: #6bd28f;
+  --success-soft: rgb(107 210 143 / 0.13);
+  --warning: #e9b949;
+  --warning-soft: rgb(233 185 73 / 0.14);
+  --info: #6aa8ff;
+  --info-soft: rgb(106 168 255 / 0.14);
+  --ai: #6aa8ff;
+  --ai-soft: rgb(106 168 255 / 0.14);
+  --ink: #171717;
+  --ink-2: #212121;
+  --ink-foreground: #9b9b9b;
+  --ink-strong: #f2f2f2;
+  --ring: #6aa8ff;
+  --shadow-lift: 0 0 0 1px #333, 0 18px 40px -14px rgb(0 0 0 / 0.75);
+  --chart-grid: #2e2e2e;
+  --chart-axis: #8a8a8a;
+  --glow-a: transparent;
+  --glow-b: transparent;
+  --edge: rgb(255 255 255 / 0.04);
   --card-sheen: none;
   color-scheme: dark;
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --color-shell: var(--shell);
@@ -133,8 +134,8 @@
   --shadow-lift: var(--shadow-lift);
   --radius-sm: 4px;
   --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
 
   /* Motion: short, eased out, never bouncy. Respects prefers-reduced-motion (bottom of file). */
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
@@ -166,7 +167,7 @@
   body {
     @apply bg-shell text-foreground;
     font-size: 14px;
-    letter-spacing: -0.003em;
+    letter-spacing: -0.006em;
   }
   :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
   ::selection { background: color-mix(in oklab, var(--primary) 30%, transparent); }
@@ -187,10 +188,7 @@
     background-attachment: local;
     position: relative;
   }
-  .ambient::before {
-    content: ''; position: absolute; inset: 0 0 auto 0; height: 1px; pointer-events: none; z-index: 40;
-    background: linear-gradient(90deg, transparent, rgb(111 143 255 / 0.55) 25%, rgb(255 255 255 / 0.25) 50%, rgb(186 85 57 / 0.6) 75%, transparent);
-  }
+
   .grid-bg {
     background-image:
       linear-gradient(to right, rgb(255 255 255 / 0.035) 1px, transparent 1px),
@@ -204,12 +202,12 @@
   }
   .sheen { box-shadow: inset 0 1px 0 var(--edge); }
   /* Primary action: flat rust with a thin top highlight (no gradients, no bloom). */
-  .glow-primary { background-color: var(--primary); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 0 0 1px color-mix(in oklab, var(--primary) 80%, black); }
+  .glow-primary { background-color: var(--primary); box-shadow: none; }
   .glow-primary:hover { background-color: var(--primary-hover); }
   .glow-ring:hover { border-color: var(--border-strong); background-color: color-mix(in oklab, var(--card) 92%, white 8%); }
   :root:not(.dark) .glow-ring:hover { background-color: var(--raised); }
   .text-gradient { color: var(--foreground); }
-  .bar-glow { background-color: #6f8fff; }
+  .bar-glow { background-color: var(--success); }
   .label-mono { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.02em; color: var(--muted-foreground); }
   /* Children rise in one after another on first paint. */
   .stagger > * { animation: var(--animate-rise-in); }

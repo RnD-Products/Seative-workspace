@@ -5,16 +5,15 @@ export function AuthCard({ title, description, children }: { title: string; desc
   return (
     <main className="grid-bg relative grid min-h-dvh place-items-center overflow-hidden bg-shell px-5 py-12">
       <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,var(--shell)_75%)]" />
-      <div aria-hidden className="pointer-events-none absolute left-[22%] top-[14%] h-[360px] w-[360px] rounded-full bg-[#6f8fff]/20 blur-[120px]" />
-      <div aria-hidden className="pointer-events-none absolute right-[22%] top-[14%] h-[360px] w-[360px] rounded-full bg-[#ba5539]/20 blur-[120px]" />
+
       <div className="relative w-full max-w-[360px]">
         <div className="mb-8 flex flex-col items-center text-center">
-          <span aria-hidden className="grid size-10 place-items-center rounded-[10px] border border-border-strong bg-card text-[17px] font-semibold text-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.08)]">S</span>
+          <span aria-hidden className="grid size-11 place-items-center rounded-[12px] bg-foreground text-[18px] font-bold text-background">S</span>
           <p className="mt-3 text-[13px] text-muted-foreground">{APP_NAME}</p>
-          <h1 className="mt-4 text-[26px] font-medium leading-tight tracking-[-0.03em]">{title}</h1>
+          <h1 className="mt-4 text-[24px] font-semibold leading-tight tracking-[-0.02em]">{title}</h1>
           {description && <p className="mt-1.5 text-[13.5px] text-muted-foreground">{description}</p>}
         </div>
-        <div className="relative rounded-xl border bg-card/90 p-5 shadow-lift backdrop-blur-xl before:pointer-events-none before:absolute before:inset-x-6 before:-top-px before:h-px before:bg-gradient-to-r before:from-transparent before:via-[#a9bcff]/60 before:to-transparent">{children}</div>
+        <div className="relative rounded-[16px] border bg-card p-5 shadow-lift">{children}</div>
         <p className="mt-6 text-center text-[12px] text-muted-foreground">Projects, tasks and progress for the whole team.</p>
       </div>
     </main>

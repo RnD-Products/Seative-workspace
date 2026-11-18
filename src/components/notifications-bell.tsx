@@ -39,7 +39,7 @@ export function NotificationsBell({ initialUnread }: { initialUnread: number }) 
         <div className="flex items-center justify-between border-b px-3 py-2.5">
           <p className="text-[13px] font-semibold">Notifications</p>
           {unread > 0 && (
-            <button className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[12px] text-primary hover:bg-primary-soft"
+            <button className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[12px] text-ai hover:bg-primary-soft"
               onClick={() => start(async () => { await markAllRead(); setUnread(0); setItems((xs) => xs?.map((x) => ({ ...x, read_at: x.read_at ?? new Date().toISOString() })) ?? null); })}>
               <CheckCheck className="size-3.5" /> Mark all read
             </button>

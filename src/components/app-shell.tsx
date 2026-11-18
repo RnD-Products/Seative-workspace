@@ -5,7 +5,7 @@ import { NotificationsBell } from './notifications-bell';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { BarChart3, FolderKanban, Inbox, Keyboard, MessagesSquare, OctagonAlert, LayoutDashboard, ListChecks, LogOut, Menu, Plus, Search, Settings, Sparkles, Users, X } from 'lucide-react';
+import { BarChart3, ChevronDown, Clock3, FolderKanban, Inbox, Keyboard, MessagesSquare, OctagonAlert, LayoutDashboard, ListChecks, LogOut, Menu, Plus, Search, Settings, Sparkles, Users, X } from 'lucide-react';
 import { cn, APP_NAME } from '@/lib/utils';
 import { ROLE_LABEL } from '@/lib/domain';
 import type { Role, RunningTimer } from '@/lib/types';
@@ -56,100 +56,128 @@ export function AppShell({ user, orgName, projects, canCreate, timer, unread, in
   const isActive = (href: string) =>
     (href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`)) || (href === '/projects' && pathname.startsWith('/tasks'));
 
-  const navItem = (active: boolean) => cn(
-    'group flex h-8 items-center gap-2.5 rounded-md px-2 text-[13px] font-medium text-ink-foreground transition-colors duration-150 hover:bg-foreground/[0.05] hover:text-ink-strong active:bg-foreground/[0.08]',
-    active && 'bg-foreground/[0.06] text-ink-strong',
-  );
+  const [projectsOpen, setProjectsOpen] = useState(true);
 
-  const sidebar = (
-    <div className="flex h-full flex-col gap-5 bg-shell px-2.5 pb-3 pt-3">
-      <div className="flex items-center gap-1">
-        <Link href="/" className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1.5 py-1 hover:bg-foreground/[0.05]">
-          <span aria-hidden className="grid size-[22px] shrink-0 place-items-center rounded-[6px] border border-border-strong bg-card text-[12px] font-semibold text-ink-strong">S</span>
-          <span className="truncate text-[13px] font-semibold text-ink-strong">{orgName}</span>
-        </Link>
-        <NotificationsBell initialUnread={unread} />
-        <button onClick={() => setPalette(true)} className="grid size-7 place-items-center rounded-md text-ink-foreground hover:bg-foreground/[0.06] hover:text-ink-strong" title={`Search (${isMac ? '⌘' : 'Ctrl'} K)`}>
-          <Search className="size-4" aria-hidden /><span className="sr-only">Search</span>
-        </button>
-        {createHref && (
-          <Link href={createHref} className="grid size-7 place-items-center rounded-md border border-border-strong bg-card text-ink-strong hover:bg-muted" title={createLabel}>
-            <Plus className="size-4" aria-hidden /><span className="sr-only">{createLabel}</span>
-          </Link>
-        )}
-      </div>
-
-      <nav aria-label="Main" className="flex flex-col gap-px">
+  // Icon rail (desktop): one icon per place, with a tooltip and a small count when something waits.
+  const rail = (
+    <div className="flex h-full w-[60px] flex-col items-center gap-1 border-r bg-shell py-3">
+      <Link href="/" className="mb-3 grid size-9 place-items-center rounded-[10px] bg-foreground text-[15px] font-bold text-background" title={orgName}>S</Link>
+      <nav aria-label="Main" className="flex flex-col items-center gap-1">
         {nav.map(({ href, label, icon: Icon, badge, tone }) => (
-          <Link key={href} href={href} aria-current={isActive(href) ? 'page' : undefined} className={navItem(isActive(href))}>
-            <Icon className={cn('size-4 opacity-60 group-hover:opacity-100', isActive(href) && 'opacity-100')} aria-hidden /> {label}
-            {badge ? <span className={cn('ml-auto min-w-[18px] rounded-[4px] px-1 text-center font-mono text-[11px] font-medium leading-[18px]', tone === 'red' ? 'bg-destructive-soft text-destructive' : tone === 'primary' ? 'bg-ai-soft text-ai' : 'bg-primary-soft text-[#e88a69]')}>{badge}</span> : null}
+          <Link key={href} href={href} aria-current={isActive(href) ? 'page' : undefined} aria-label={label}
+            className={cn('group relative grid size-9 place-items-center rounded-[10px] text-ink-foreground transition-colors hover:bg-foreground/[0.07] hover:text-ink-strong', isActive(href) && 'bg-foreground/[0.1] text-ink-strong')}>
+            <Icon className="size-[18px]" aria-hidden />
+            {badge ? <span className={cn('absolute -right-1 -top-1 grid min-w-4 place-items-center rounded-full px-1 text-[10px] font-semibold leading-4 text-white ring-2 ring-shell', tone === 'red' ? 'bg-destructive' : tone === 'primary' ? 'bg-ai' : 'bg-deadline')}>{badge}</span> : null}
+            <span role="tooltip" className="pointer-events-none absolute left-full z-50 ml-2 whitespace-nowrap rounded-md border bg-card px-2 py-1 text-[12px] text-foreground opacity-0 shadow-lift transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">{label}</span>
           </Link>
         ))}
-{user.role !== 'sales' && (
-        <Link href="/ask" aria-current={pathname === '/ask' ? 'page' : undefined} className={navItem(pathname === '/ask')}>
-          <Sparkles className="size-4 text-ai" aria-hidden /> Ask about work
-        </Link>
+        {user.role !== 'sales' && (
+          <Link href="/ask" aria-label="Ask about work" aria-current={pathname === '/ask' ? 'page' : undefined}
+            className={cn('group relative grid size-9 place-items-center rounded-[10px] text-ai hover:bg-foreground/[0.07]', pathname === '/ask' && 'bg-foreground/[0.1]')}>
+            <Sparkles className="size-[18px]" aria-hidden />
+            <span role="tooltip" className="pointer-events-none absolute left-full z-50 ml-2 whitespace-nowrap rounded-md border bg-card px-2 py-1 text-[12px] text-foreground opacity-0 shadow-lift transition-opacity group-hover:opacity-100">Ask about work</span>
+          </Link>
         )}
       </nav>
-
-      {projects.length > 0 ? (
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <p className="px-2 pb-1 text-[11px] text-ink-foreground/70">Projects</p>
-          <ul className="flex flex-col gap-px">
-            {projects.slice(0, 10).map((p) => {
-              const here = pathname === `/projects/${p.id}`;
-              return (
-                <li key={p.id}>
-                  <Link href={`/projects/${p.id}`} aria-current={here ? 'page' : undefined} className={cn(navItem(here), 'font-normal')}>
-                    <span aria-hidden className="grid size-4 shrink-0 place-items-center"><span className="size-2 rounded-[2px]" style={{ background: p.color }} /></span>
-                    <span className="truncate">{p.name}</span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ) : <div className="flex-1" />}
-
-      {timer && <RunningTimerPill timer={timer} />}
-
-      <div className="flex items-center gap-2 rounded-md px-1.5 py-1">
-        <Avatar person={user} size="sm" />
-        <div className="min-w-0 flex-1 leading-tight">
-          <p className="truncate text-[13px] font-medium text-ink-strong">{user.full_name}</p>
-          <p className="truncate text-[11px] text-ink-foreground">{ROLE_LABEL[user.role]}</p>
-        </div>
-        <button onClick={() => setHelp(true)} className="hidden size-7 place-items-center rounded-md text-ink-foreground hover:bg-foreground/[0.06] hover:text-ink-strong lg:grid" title="Keyboard shortcuts (?)">
-          <Keyboard className="size-4" aria-hidden /><span className="sr-only">Keyboard shortcuts</span>
+      <div className="mt-auto flex flex-col items-center gap-1">
+        <NotificationsBell initialUnread={unread} />
+        <button onClick={() => setHelp(true)} className="grid size-9 place-items-center rounded-[10px] text-ink-foreground hover:bg-foreground/[0.07] hover:text-ink-strong" title="Keyboard shortcuts (?)">
+          <Keyboard className="size-[18px]" aria-hidden /><span className="sr-only">Keyboard shortcuts</span>
         </button>
-        <ThemeToggle className="size-7" />
+        <ThemeToggle className="size-9 rounded-[10px]" />
         <form action={signOut}>
-          <button type="submit" className="grid size-7 place-items-center rounded-md text-ink-foreground hover:bg-foreground/[0.06] hover:text-ink-strong" title="Sign out">
-            <LogOut className="size-4" aria-hidden /><span className="sr-only">Sign out</span>
+          <button type="submit" className="grid size-9 place-items-center rounded-[10px] text-ink-foreground hover:bg-foreground/[0.07] hover:text-ink-strong" title="Sign out">
+            <LogOut className="size-[18px]" aria-hidden /><span className="sr-only">Sign out</span>
           </button>
         </form>
+        <span className="mt-1" title={`${user.full_name} · ${ROLE_LABEL[user.role]}`}><Avatar person={user} size="md" /></span>
       </div>
     </div>
   );
 
+  // Second panel: search, the project list with open-task counts, and a create button.
+  const panel = (mobile: boolean) => (
+    <div className="flex h-full flex-col gap-3 bg-shell px-3 pb-3 pt-4">
+      <div className={cn('flex items-center justify-between px-1', mobile && 'pr-9')}>
+        <p className="text-[17px] font-semibold tracking-[-0.01em] text-ink-strong">{user.role === 'sales' ? 'Deals' : 'Projects'}</p>
+        <span className="truncate pl-2 text-[11.5px] text-ink-foreground">{orgName}</span>
+      </div>
+      <button onClick={() => setPalette(true)} className="flex h-9 items-center gap-2 rounded-[10px] border bg-card px-2.5 text-[13px] text-ink-foreground hover:border-border-strong">
+        <Search className="size-4" aria-hidden /> <span className="flex-1 text-left">Search…</span>
+        <kbd className="rounded-[5px] border bg-muted px-1.5 font-sans text-[10.5px] font-medium">{isMac ? '⌘' : 'Ctrl'} K</kbd>
+      </button>
+      {mobile && (
+        <nav aria-label="Main" className="flex flex-col gap-px">
+          {nav.map(({ href, label, icon: Icon, badge }) => (
+            <Link key={href} href={href} aria-current={isActive(href) ? 'page' : undefined}
+              className={cn('flex h-9 items-center gap-2.5 rounded-[10px] px-2.5 text-[13px] text-ink-foreground hover:bg-foreground/[0.06] hover:text-ink-strong', isActive(href) && 'bg-foreground/[0.08] text-ink-strong')}>
+              <Icon className="size-4" aria-hidden /> {label}
+              {badge ? <span className="ml-auto rounded-full bg-foreground/10 px-1.5 text-[11px] font-semibold">{badge}</span> : null}
+            </Link>
+          ))}
+        </nav>
+      )}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <button onClick={() => setProjectsOpen((o) => !o)} aria-expanded={projectsOpen} className="flex w-full items-center gap-2 rounded-md px-1.5 py-1.5 text-[12.5px] text-ink-foreground hover:text-ink-strong">
+          <Clock3 className="size-3.5" aria-hidden /> Active <ChevronDown className={cn('ml-auto size-3.5 transition-transform', !projectsOpen && '-rotate-90')} aria-hidden />
+        </button>
+        {projectsOpen && (
+          <ul className="ml-3 mt-0.5 flex flex-col gap-px border-l pl-2">
+            {projects.slice(0, 12).map((p) => {
+              const here = pathname === `/projects/${p.id}`;
+              return (
+                <li key={p.id}>
+                  <Link href={`/projects/${p.id}`} aria-current={here ? 'page' : undefined}
+                    className={cn('flex h-8 items-center gap-2 rounded-[8px] px-2 text-[13px] text-ink-foreground transition-colors hover:bg-foreground/[0.06] hover:text-ink-strong', here && 'bg-foreground/[0.09] text-ink-strong')}>
+                    <span className="text-ink-foreground/60">#</span>
+                    <span className="min-w-0 flex-1 truncate">{p.name}</span>
+                    {p.open ? <span className="grid min-w-5 place-items-center rounded-full px-1 text-[10.5px] font-semibold leading-5 text-black" style={{ background: p.color }}>{p.open}</span> : null}
+                  </Link>
+                </li>
+              );
+            })}
+            {!projects.length && <li className="px-2 py-1 text-[12.5px] text-ink-foreground">No active projects.</li>}
+          </ul>
+        )}
+        <Link href="/projects" className={cn('mt-1 flex h-8 items-center gap-2 rounded-[8px] px-1.5 text-[12.5px] text-ink-foreground hover:text-ink-strong', pathname === '/projects' && 'text-ink-strong')}>
+          <FolderKanban className="size-3.5" aria-hidden /> {user.role === 'sales' ? 'All deals' : 'All projects'}
+        </Link>
+      </div>
+      {timer && <RunningTimerPill timer={timer} />}
+      {createHref && (
+        <Link href={createHref} className="flex h-9 items-center justify-center gap-2 rounded-[10px] border border-border-strong bg-card text-[13px] font-medium text-ink-strong hover:bg-muted">
+          <Plus className="size-4" aria-hidden /> {createLabel}
+        </Link>
+      )}
+      {mobile && (
+        <div className="flex items-center gap-2 border-t pt-3">
+          <Avatar person={user} size="sm" />
+          <div className="min-w-0 flex-1 leading-tight"><p className="truncate text-[13px] font-medium">{user.full_name}</p><p className="truncate text-[11px] text-ink-foreground">{ROLE_LABEL[user.role]}</p></div>
+          <ThemeToggle className="size-8" />
+          <form action={signOut}><button type="submit" className="grid size-8 place-items-center rounded-md text-ink-foreground hover:bg-foreground/[0.06]" title="Sign out"><LogOut className="size-4" aria-hidden /><span className="sr-only">Sign out</span></button></form>
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div className="min-h-dvh bg-shell lg:grid lg:h-dvh lg:grid-cols-[232px_1fr] lg:overflow-hidden">
+    <div className="min-h-dvh bg-shell lg:grid lg:h-dvh lg:grid-cols-[60px_236px_1fr] lg:overflow-hidden">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-card focus:px-3 focus:py-2">Skip to content</a>
 
-      <aside className="hidden h-dvh lg:block">{sidebar}</aside>
+      <aside className="hidden h-dvh lg:block">{rail}</aside>
+      <aside className="hidden h-dvh border-r lg:block" aria-label="Projects">{panel(false)}</aside>
 
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <div className="absolute inset-0 bg-black/50 animate-overlay-in" onClick={() => setOpen(false)} />
           <div className="absolute inset-y-0 left-0 w-72 border-r shadow-lift animate-drawer-in">
-            {sidebar}
-            <button onClick={() => setOpen(false)} className="absolute right-2 top-12 grid size-7 place-items-center rounded-md text-ink-foreground hover:bg-foreground/10" aria-label="Close menu"><X className="size-4" /></button>
+            {panel(true)}
+            <button onClick={() => setOpen(false)} className="absolute right-3 top-[18px] grid size-7 place-items-center rounded-md text-ink-foreground hover:bg-foreground/10" aria-label="Close menu"><X className="size-4" /></button>
           </div>
         </div>
       )}
 
-      <div className="ambient flex min-w-0 flex-col lg:my-2 lg:mr-2 lg:overflow-y-auto lg:rounded-xl lg:border lg:shadow-[0_0_0_1px_var(--edge),0_20px_60px_-30px_rgb(0_0_0/0.6)]" data-scroll-root>
+      <div className="flex min-w-0 flex-col bg-background lg:overflow-y-auto" data-scroll-root>
         <header className="sticky top-0 z-30 flex h-11 shrink-0 items-center gap-2 border-b bg-background/70 px-3 backdrop-blur-xl sm:px-5 lg:hidden">
           <button onClick={() => setOpen(true)} className="grid size-8 place-items-center rounded-md hover:bg-muted" aria-label="Open menu" aria-expanded={open}>
             <Menu className="size-4" />

@@ -41,7 +41,7 @@ export function Toaster() {
             <Icon className={cn('size-4 shrink-0', t.tone === 'error' ? 'text-destructive' : t.tone === 'info' ? 'text-info' : 'text-success')} aria-hidden />
             <span className="min-w-0 flex-1">{t.message}</span>
             {t.action && (
-              <button className="rounded-md px-2 py-1 text-[12.5px] font-medium text-primary hover:bg-primary-soft"
+              <button className="rounded-md px-2 py-1 text-[12.5px] font-medium text-ai hover:bg-primary-soft"
                 onClick={() => { t.action!.run(); dismiss(t.id); }}>{t.action.label}</button>
             )}
             <button onClick={() => dismiss(t.id)} className="grid size-6 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Dismiss">

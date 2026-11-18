@@ -16,7 +16,7 @@ function RoleButton({ account }: { account: TestAccount }) {
   return (
     <button type="submit" name="role" value={account.role} disabled={pending}
       className={cn('group flex w-full items-center gap-3 rounded-lg border border-border-strong bg-card px-3.5 py-3 text-left transition-colors hover:border-primary/50 hover:bg-primary/[0.06] disabled:opacity-60')}>
-      <span className="grid size-9 shrink-0 place-items-center rounded-md bg-primary/12 text-primary">{mine ? <Spinner /> : <Icon className="size-4" />}</span>
+      <span className="grid size-9 shrink-0 place-items-center rounded-md bg-primary/12 text-ai">{mine ? <Spinner /> : <Icon className="size-4" />}</span>
       <span className="min-w-0 flex-1">
         <span className="block text-[14px] font-medium">Sign in as {account.label}</span>
         <span className="block truncate text-[12px] text-muted-foreground">{account.blurb}</span>

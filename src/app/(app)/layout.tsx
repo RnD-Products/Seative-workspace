@@ -13,13 +13,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const supabase = await createClient();
   // Sidebar list — RLS limits it to projects this user can see.
   const isManager = session.profile.role === 'pm' || session.profile.role === 'ceo';
-  const [{ data: projects }, { data: running }, { count: unread }, { data: incomingRows }, { data: blockerRows }, { data: chatRows }] = await Promise.all([
+  const [{ data: projects }, { data: openTasks }, { data: running }, { count: unread }, { data: incomingRows }, { data: blockerRows }, { data: chatRows }] = await Promise.all([
     supabase
       .from('projects')
       .select('id, name')
       .in('status', ['active', 'planning'])
       .order('due_date', { ascending: true, nullsFirst: false })
       .limit(12),
+    supabase.from('tasks').select('project_id').neq('status', 'done').limit(5000),
     supabase
       .from('time_entries')
       .select('id, project_id, task_id, started_at, projects(name), tasks(title)')
@@ -38,7 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <AppShell
       user={{ id: session.profile.id, full_name: session.profile.full_name, role: session.profile.role }}
       orgName={session.org.name}
-      projects={(projects ?? []).map((p) => ({ id: p.id, name: p.name, color: projectColor(p.id) }))}
+      projects={(projects ?? []).map((p) => ({ id: p.id, name: p.name, color: projectColor(p.id), open: (openTasks ?? []).filter((t) => t.project_id === p.id).length }))}
       canCreate={canCreateProjects(session)}
       timer={timer}
       unread={unread ?? 0}

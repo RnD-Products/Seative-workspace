@@ -43,8 +43,8 @@ export function SalesCard({ sales, owner, canEdit, minutesLogged, compact }: {
           {(sales.client_contact_name || sales.client_email || sales.client_phone) && (
             <Row label="Contact">
               <span className="block">{sales.client_contact_name}</span>
-              {sales.client_email && <a href={`mailto:${sales.client_email}`} className="flex items-center gap-1 text-primary hover:underline"><Mail className="size-3" />{sales.client_email}</a>}
-              {sales.client_phone && <a href={`tel:${sales.client_phone}`} className="flex items-center gap-1 text-primary hover:underline"><Phone className="size-3" />{sales.client_phone}</a>}
+              {sales.client_email && <a href={`mailto:${sales.client_email}`} className="flex items-center gap-1 text-ai hover:underline"><Mail className="size-3" />{sales.client_email}</a>}
+              {sales.client_phone && <a href={`tel:${sales.client_phone}`} className="flex items-center gap-1 text-ai hover:underline"><Phone className="size-3" />{sales.client_phone}</a>}
             </Row>
           )}
           {minutesLogged !== undefined && <Row label="Hours logged">{hours.toFixed(1)}h{rate ? <span className="text-muted-foreground"> · {fmtMoney(Math.round(rate), sales.currency)}/h so far</span> : null}</Row>}

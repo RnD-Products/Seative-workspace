@@ -113,8 +113,15 @@ export default async function ProjectPage({ params, searchParams }: {
   return (
     <>
       <PageHeader
-        back={<Link href="/projects" className="text-sm text-muted-foreground hover:text-foreground">← Projects</Link>}
+        back={<nav aria-label="Breadcrumb" className="text-[12.5px] text-muted-foreground"><Link href="/projects" className="hover:text-foreground">Projects</Link><span className="mx-1.5">›</span><span className="text-foreground">{project.name}</span></nav>}
         title={project.name}
+        description={members.length ? (
+          <span className="flex items-center gap-3 pt-1">
+            <span className="flex -space-x-2">{members.slice(0, 5).map((m) => <span key={m.id} className="rounded-full ring-2 ring-background"><Avatar person={m} size="md" /></span>)}</span>
+            {members.length > 5 && <span className="-ml-1 grid size-7 place-items-center rounded-full bg-muted text-[11px] font-medium text-foreground ring-2 ring-background">+{members.length - 5}</span>}
+            <span className="text-[12.5px]">{members.length} {members.length === 1 ? 'person' : 'people'} on this project</span>
+          </span>
+        ) : undefined}
         actions={manages ? (
           <>
             {chatButton}
@@ -165,7 +172,7 @@ export default async function ProjectPage({ params, searchParams }: {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Users className="size-4" aria-hidden /> Members <span className="text-xs font-normal text-muted-foreground">{members.length}</span></CardTitle>{manages && project.status !== 'incoming' && <Link href={`/projects/${id}/start`} className="text-[12px] text-primary hover:underline">Team and due dates</Link>}</CardHeader>
+          <CardHeader><CardTitle className="flex items-center gap-2"><Users className="size-4" aria-hidden /> Members <span className="text-xs font-normal text-muted-foreground">{members.length}</span></CardTitle>{manages && project.status !== 'incoming' && <Link href={`/projects/${id}/start`} className="text-[12px] text-ai hover:underline">Team and due dates</Link>}</CardHeader>
           <CardContent>
             {members.length ? (
               <ul className="space-y-2.5">
@@ -182,7 +189,7 @@ export default async function ProjectPage({ params, searchParams }: {
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted-foreground">No members yet.{manages && <> <Link href={`/projects/${id}/edit`} className="text-primary hover:underline">Add people</Link> so you can assign them tasks.</>}</p>
+              <p className="text-sm text-muted-foreground">No members yet.{manages && <> <Link href={`/projects/${id}/edit`} className="text-ai hover:underline">Add people</Link> so you can assign them tasks.</>}</p>
             )}
           </CardContent>
         </Card>

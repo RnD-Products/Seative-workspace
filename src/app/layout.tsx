@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [{ media: '(prefers-color-scheme: light)', color: '#f3f2f6' }, { media: '(prefers-color-scheme: dark)', color: '#08090a' }],
+  themeColor: [{ media: '(prefers-color-scheme: light)', color: '#f1f1f2' }, { media: '(prefers-color-scheme: dark)', color: '#171717' }],
 };
 
 // Dark is the default look; a saved choice wins. Runs before first paint, so there is no flash.

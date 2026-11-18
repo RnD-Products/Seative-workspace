@@ -29,7 +29,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     return (
       <AuthCard title="No workspace access yet" description={`You're signed in as ${user.email}.`}>
         <Alert tone="warning">This account isn&apos;t part of an organization. Ask your CEO to add you from Settings → Members.</Alert>
-        <form action={signOut} className="mt-4"><button className="text-sm text-primary underline-offset-4 hover:underline">Sign out</button></form>
+        <form action={signOut} className="mt-4"><button className="text-sm text-ai underline-offset-4 hover:underline">Sign out</button></form>
       </AuthCard>
     );
   }

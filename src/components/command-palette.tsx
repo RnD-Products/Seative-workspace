@@ -5,7 +5,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { CornerDownLeft, FolderKanban, LayoutDashboard, ListChecks, Plus, Search, Settings, Sparkles, Users, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export interface PaletteProject { id: string; name: string; color: string }
+export interface PaletteProject { id: string; name: string; color: string; open?: number }
 
 interface Item { id: string; label: string; hint?: string; group: string; icon: React.ReactNode; run: () => void }
 

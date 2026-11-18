@@ -2,7 +2,7 @@
 import { toast } from '@/components/ui/toast';
 import Link from 'next/link';
 import { useEffect, useRef, useState, useTransition } from 'react';
-import { ListChecks } from 'lucide-react';
+import { CalendarDays, ListChecks } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { NativeSelect } from '@/components/ui/input';
 import { Alert, EmptyState } from '@/components/ui/misc';
@@ -133,11 +133,11 @@ function Board({ tasks, move, canEdit, projectMap, peopleMap, showProject, quick
             onDragOver={(e) => { if (dragId) { e.preventDefault(); setOver(col); } }}
             onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(null); }}
             onDrop={() => { if (dragId) move(dragId, col); setDragId(null); setOver(null); }}
-            className={cn('min-h-48 rounded-lg border border-transparent bg-foreground/[0.02] p-1.5 transition-colors', over === col && 'border-primary/40 bg-primary-soft')}
+            className={cn('min-h-48 rounded-[14px] border bg-card/60 p-2 transition-colors', over === col && 'border-ai/50 bg-ai-soft')}
           >
-            <h3 className="flex items-center gap-2 px-2 pb-2 pt-1.5 text-[13px] font-medium">
+            <h3 className="flex items-center gap-2 px-2 pb-2.5 pt-1.5 text-[14px] font-semibold">
               <StatusIcon status={col} />{TASK_STATUS_LABEL[col]}
-              <span className="text-[12px] font-normal text-muted-foreground tabular">{list.length}</span>
+              <span className="rounded-full bg-foreground/[0.07] px-1.5 text-[11.5px] font-medium text-muted-foreground tabular">{list.length}</span>
             </h3>
             <ul className="space-y-2">
               {list.map((t) => {
@@ -149,15 +149,24 @@ function Board({ tasks, move, canEdit, projectMap, peopleMap, showProject, quick
                     draggable={editable}
                     onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; setDragId(t.id); }}
                     onDragEnd={() => { setDragId(null); setOver(null); }}
-                    className={cn('lift sheen glow-ring rounded-md border border-border-strong/70 bg-card p-2.5 hover:border-primary/40', editable && 'cursor-grab active:cursor-grabbing', dragId === t.id && 'opacity-40')}
+                    className={cn('lift rounded-[12px] border bg-raised p-3 hover:border-border-strong', editable && 'cursor-grab active:cursor-grabbing', dragId === t.id && 'opacity-40')}
                   >
-                    {showProject && <p className="mb-1 flex items-center gap-1.5 truncate text-[12px] text-muted-foreground"><span aria-hidden className="size-2 rounded-[2px]" style={{ background: projectColor(t.project_id) }} />{projectMap.get(t.project_id)?.name}</p>}
-                    <Link href={`/tasks/${t.id}`} className="block text-[13px] font-medium leading-snug">{t.title}</Link>
-                    {blocked.has(t.id) && <div className="mt-1.5"><BlockedLabel /></div>}
-                    <div className="mt-2 flex items-center gap-2 text-[12px]">
-                      <PriorityIcon priority={t.priority} />
-                      <span className={cn('text-muted-foreground', isOverdue(t) && 'font-medium text-destructive', !isOverdue(t) && t.status !== 'done' && t.due_date && daysUntil(t.due_date) <= 2 && 'font-medium text-deadline')}>{dueLabel(t)}</span>
-                      <Avatar person={assignee} className="ml-auto" />
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <PriorityChip priority={t.priority} />
+                      {t.due_date && (
+                        <span className={cn('inline-flex h-6 items-center gap-1 rounded-md border px-1.5 text-[11.5px] text-muted-foreground',
+                          isOverdue(t) && 'border-destructive/30 bg-destructive-soft text-destructive',
+                          !isOverdue(t) && t.status !== 'done' && daysUntil(t.due_date) <= 2 && 'border-deadline/30 bg-deadline-soft text-deadline')}>
+                          <CalendarDays className="size-3" aria-hidden />{dueLabel(t)}
+                        </span>
+                      )}
+                      {blocked.has(t.id) && <BlockedLabel />}
+                    </div>
+                    <Link href={`/tasks/${t.id}`} className="mt-2.5 block text-[14px] font-semibold leading-snug">{t.title}</Link>
+                    {t.description && <p className="mt-1 line-clamp-2 text-[12.5px] leading-relaxed text-muted-foreground">{t.description}</p>}
+                    <div className="mt-3 flex items-center gap-2 text-[12px]">
+                      <Avatar person={assignee} />
+                      {showProject && <span className="ml-auto flex min-w-0 items-center gap-1.5 truncate text-muted-foreground"><span aria-hidden className="size-2 shrink-0 rounded-full" style={{ background: projectColor(t.project_id) }} /><span className="truncate">{projectMap.get(t.project_id)?.name}</span></span>}
                     </div>
                     {editable && (
                       // Keyboard / touch alternative to drag-and-drop.
@@ -193,6 +202,13 @@ function DoneToggle({ task, editable, move }: { task: Task; editable: boolean; m
       {!done && <StatusIcon status="done" className="absolute opacity-0 transition-opacity group-hover/done:opacity-60" />}
     </button>
   );
+}
+
+const PRIORITY_CHIP: Record<Task['priority'], string> = {
+  low: 'bg-success-soft text-success', medium: 'bg-deadline-soft text-deadline', high: 'bg-destructive-soft text-destructive', urgent: 'bg-destructive text-white',
+};
+function PriorityChip({ priority }: { priority: Task['priority'] }) {
+  return <span className={cn('inline-flex h-6 items-center rounded-md px-2 text-[11.5px] font-medium', PRIORITY_CHIP[priority])}>{PRIORITY_LABEL[priority]}</span>;
 }
 
 function BlockedLabel() {

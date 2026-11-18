@@ -32,11 +32,11 @@ function Body({ text, mentionNames, meName }: { text: string; mentionNames: stri
   return (
     <>
       {parts.map((part, i) => {
-        if (i % 2 === 1) return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 break-all">{part}</a>;
+        if (i % 2 === 1) return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-ai underline underline-offset-2 break-all">{part}</a>;
         if (!re) return <Fragment key={i}>{part}</Fragment>;
         return part.split(re).map((seg, j) =>
           j % 2 === 1
-            ? <span key={`${i}-${j}`} className={cn('rounded px-0.5 font-medium', seg === `@${meName}` ? 'bg-deadline-soft text-deadline' : 'bg-primary/12 text-primary')}>{seg}</span>
+            ? <span key={`${i}-${j}`} className={cn('rounded px-0.5 font-medium', seg === `@${meName}` ? 'bg-deadline-soft text-deadline' : 'bg-primary/12 text-ai')}>{seg}</span>
             : <Fragment key={`${i}-${j}`}>{seg}</Fragment>);
       })}
     </>
@@ -292,7 +292,7 @@ export function ChatRoom({ conversationId, initial, people, meId, mentionable, p
                           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void saveEdit(); } if (e.key === 'Escape') setEditing(null); }}
                           className="w-full resize-none rounded-md border border-input bg-card px-2.5 py-1.5 text-[13.5px] outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20" />
                         <p className="mt-1 flex items-center gap-2 text-[11.5px] text-muted-foreground">
-                          <button type="button" onClick={() => void saveEdit()} className="inline-flex items-center gap-1 font-medium text-primary hover:underline"><Check className="size-3" />Save</button>
+                          <button type="button" onClick={() => void saveEdit()} className="inline-flex items-center gap-1 font-medium text-ai hover:underline"><Check className="size-3" />Save</button>
                           <button type="button" onClick={() => setEditing(null)} className="hover:underline">Cancel</button>
                           <span>Enter to save · Esc to cancel · the earlier text stays in the edit history</span>
                         </p>

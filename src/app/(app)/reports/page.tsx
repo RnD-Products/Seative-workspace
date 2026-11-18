@@ -104,7 +104,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
                   <tr>
                     <th scope="row" className="sticky left-0 z-10 md:static bg-card py-2 pl-4 text-left">Total</th>
                     {projects.map((p) => <td key={p.id} className="px-3 py-2 text-right tabular">{p.minutes ? fmtMinutes(p.minutes) : '—'}</td>)}
-                    <td className="py-2 pl-3 pr-4 text-right tabular text-primary">{fmtMinutes(total)}</td>
+                    <td className="py-2 pl-3 pr-4 text-right tabular text-ai">{fmtMinutes(total)}</td>
                   </tr>
                 </tfoot>
               </table>

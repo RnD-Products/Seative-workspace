@@ -49,12 +49,12 @@ export function WeekStrip({ tasks, projectNames, title }: {
           const off = isOffDay(d);
           return (
             <div key={d.toISOString()}
-              className={cn('flex items-start gap-3 border-b px-3 py-2 md:block md:min-h-36 md:border-b-0 md:border-r md:p-3 last:border-r-0', !due.length && !isToday && 'hidden md:block', off && 'bg-[repeating-linear-gradient(135deg,transparent_0_6px,var(--border)_6px_7px)]', isToday && 'bg-primary/[0.08] shadow-[inset_0_2px_0_var(--primary),inset_0_30px_40px_-30px_var(--primary)]')}>
+              className={cn('flex items-start gap-3 border-b px-3 py-2 md:block md:min-h-36 md:border-b-0 md:border-r md:p-3 last:border-r-0', !due.length && !isToday && 'hidden md:block', off && 'bg-[repeating-linear-gradient(135deg,transparent_0_6px,var(--border)_6px_7px)]', isToday && 'bg-ai-soft shadow-[inset_0_2px_0_var(--ai)]')}>
               <div className="flex w-14 shrink-0 items-baseline justify-between md:w-auto">
-                <span className={cn('text-xs font-medium', isToday ? 'text-primary' : 'text-muted-foreground')}>{isToday ? 'Today' : format(d, 'EEE')}</span>
+                <span className={cn('text-xs font-medium', isToday ? 'text-ai' : 'text-muted-foreground')}>{isToday ? 'Today' : format(d, 'EEE')}</span>
                 {off && <span className="text-[11px] text-muted-foreground">Off</span>}
               </div>
-              <p className={cn('text-[22px] font-normal tracking-[-0.03em] leading-tight tracking-[-0.03em] tabular', isToday ? 'text-primary' : off ? 'text-muted-foreground/60' : '')}>{format(d, 'd')}</p>
+              <p className={cn('text-[22px] font-normal tracking-[-0.03em] leading-tight tracking-[-0.03em] tabular', isToday ? 'text-ai' : off ? 'text-muted-foreground/60' : '')}>{format(d, 'd')}</p>
               <ul className="min-w-0 flex-1 space-y-1 md:mt-1.5">
                 {due.slice(0, 3).map((t) => (
                   <li key={t.id}>

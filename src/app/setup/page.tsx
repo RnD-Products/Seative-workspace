@@ -19,7 +19,7 @@ export default async function SetupPage() {
     return (
       <AuthCard title="Setup is complete" description="This workspace already has an organization.">
         <p className="text-sm text-muted-foreground">Sign in with the account your CEO created for you.</p>
-        <Link href="/login" className="mt-4 inline-block text-sm font-medium text-primary hover:underline">Go to sign in →</Link>
+        <Link href="/login" className="mt-4 inline-block text-sm font-medium text-ai hover:underline">Go to sign in →</Link>
       </AuthCard>
     );
   }
