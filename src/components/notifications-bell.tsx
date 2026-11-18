@@ -32,7 +32,7 @@ export function NotificationsBell({ initialUnread }: { initialUnread: number }) 
       <DropdownMenuTrigger asChild>
         <button className="relative grid size-7 place-items-center rounded-md text-ink-foreground hover:bg-foreground/[0.06] hover:text-ink-strong" title="Notifications" aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}>
           <Bell className="size-4" aria-hidden />
-          {unread > 0 && <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-white shadow-[0_0_8px_var(--destructive)]">{unread > 99 ? '99+' : unread}</span>}
+          {unread > 0 && <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-white">{unread > 99 ? '99+' : unread}</span>}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-[360px] p-0">

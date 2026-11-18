@@ -154,9 +154,9 @@ function Board({ tasks, move, canEdit, projectMap, peopleMap, showProject, quick
                     <div className="flex flex-wrap items-center gap-1.5">
                       <PriorityChip priority={t.priority} />
                       {t.due_date && (
-                        <span className={cn('inline-flex h-6 items-center gap-1 rounded-md border px-1.5 text-[11.5px] text-muted-foreground',
-                          isOverdue(t) && 'border-destructive/30 bg-destructive-soft text-destructive',
-                          !isOverdue(t) && t.status !== 'done' && daysUntil(t.due_date) <= 2 && 'border-deadline/30 bg-deadline-soft text-deadline')}>
+                        <span className={cn('inline-flex h-6 items-center gap-1 rounded-md bg-foreground/[0.05] px-1.5 text-[11.5px] text-muted-foreground',
+                          isOverdue(t) && 'text-destructive',
+                          !isOverdue(t) && t.status !== 'done' && daysUntil(t.due_date) <= 2 && 'text-deadline')}>
                           <CalendarDays className="size-3" aria-hidden />{dueLabel(t)}
                         </span>
                       )}
@@ -205,10 +205,14 @@ function DoneToggle({ task, editable, move }: { task: Task; editable: boolean; m
 }
 
 const PRIORITY_CHIP: Record<Task['priority'], string> = {
-  low: 'bg-success-soft text-success', medium: 'bg-deadline-soft text-deadline', high: 'bg-destructive-soft text-destructive', urgent: 'bg-destructive text-white',
+  low: 'bg-success-soft text-success', medium: 'bg-deadline-soft text-deadline', high: 'bg-[rgb(242_140_90/0.14)] text-[#f0a274]', urgent: 'bg-destructive-soft text-destructive',
 };
 function PriorityChip({ priority }: { priority: Task['priority'] }) {
-  return <span className={cn('inline-flex h-6 items-center rounded-md px-2 text-[11.5px] font-medium', PRIORITY_CHIP[priority])}>{PRIORITY_LABEL[priority]}</span>;
+  return (
+    <span className={cn('inline-flex h-6 items-center gap-1.5 rounded-md px-2 text-[11.5px] font-medium', PRIORITY_CHIP[priority])}>
+      {priority === 'urgent' && <span aria-hidden className="size-1.5 rounded-full bg-current" />}{PRIORITY_LABEL[priority]}
+    </span>
+  );
 }
 
 function BlockedLabel() {
