@@ -52,7 +52,7 @@ export function CommandPalette({ open, onOpenChange, projects, canCreate }: {
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-overlay-in data-[state=closed]:animate-overlay-out" />
         <DialogPrimitive.Content
           aria-label="Search or jump to"
-          className="fixed left-1/2 top-[12vh] z-50 w-[calc(100vw-2rem)] max-w-[620px] -translate-x-1/2 overflow-hidden rounded-xl border border-border-strong bg-raised shadow-lift data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out"
+          className="fixed left-1/2 top-[12vh] z-50 w-[calc(100vw-2rem)] max-w-[620px] -translate-x-1/2 overflow-hidden rounded-xl border border-border-strong bg-popover text-popover-foreground shadow-lift data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out"
           onKeyDown={(e) => {
             if (e.key === 'ArrowDown') { e.preventDefault(); setActive((a) => Math.min(items.length - 1, a + 1)); }
             if (e.key === 'ArrowUp') { e.preventDefault(); setActive((a) => Math.max(0, a - 1)); }

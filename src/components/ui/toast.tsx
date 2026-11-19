@@ -37,7 +37,7 @@ export function Toaster() {
         const Icon = t.tone === 'error' ? AlertCircle : t.tone === 'info' ? Info : CheckCircle2;
         return (
           <div key={t.id} role={t.tone === 'error' ? 'alert' : 'status'}
-            className="sheen pointer-events-auto flex w-full max-w-sm animate-pop-in items-center gap-2.5 rounded-lg border border-border-strong bg-raised py-2.5 pl-3 pr-2 text-[13px] shadow-lift">
+            className="sheen pointer-events-auto flex w-full max-w-sm animate-pop-in items-center gap-2.5 rounded-lg border border-border-strong bg-popover text-popover-foreground py-2.5 pl-3 pr-2 text-[13px] shadow-lift">
             <Icon className={cn('size-4 shrink-0', t.tone === 'error' ? 'text-destructive' : t.tone === 'info' ? 'text-info' : 'text-success')} aria-hidden />
             <span className="min-w-0 flex-1">{t.message}</span>
             {t.action && (

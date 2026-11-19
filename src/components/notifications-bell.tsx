@@ -35,7 +35,7 @@ export function NotificationsBell({ initialUnread }: { initialUnread: number }) 
           {unread > 0 && <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-white">{unread > 99 ? '99+' : unread}</span>}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-[360px] p-0">
+      <DropdownMenuContent align="end" className="w-[360px] p-0">
         <div className="flex items-center justify-between border-b px-3 py-2.5">
           <p className="text-[13px] font-semibold">Notifications</p>
           {unread > 0 && (
