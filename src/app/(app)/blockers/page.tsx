@@ -44,18 +44,18 @@ export default async function BlockersPage({ searchParams }: { searchParams: Pro
       <PageHeader title="Blockers" description={role === 'ceo' ? 'Everything that is stuck across the company, and whose side it is on.' : 'What is stuck on the projects you manage, and whose side it is on.'} />
 
       <div className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Link href={q({ side: null, show: null })} className={cn('sheen glow-ring rounded-lg border bg-card px-4 py-3.5 transition-shadow', !side && !showResolved && 'border-primary/40')}>
+        <Link href={q({ side: null, show: null })} className={cn('sheen glow-ring glass rounded-[22px] border px-4 py-3.5 transition-shadow', !side && !showResolved && 'border-primary/40')}>
           <p className="text-[12.5px] text-muted-foreground">Open blockers</p>
-          <p className="mt-1.5 text-[26px] font-normal tracking-[-0.03em] leading-none tabular text-gradient">{open.length}</p>
+          <p className="mt-1.5 text-[32px] font-light tracking-[-0.04em] leading-none tabular text-gradient">{open.length}</p>
           <p className={cn('mt-1.5 text-[12px]', stale ? 'text-deadline' : 'text-muted-foreground')}>{stale} open 3+ days</p>
         </Link>
         {BLOCKER_SIDES.map((s) => {
           const n = open.filter((b) => b.side === s).length;
           return (
             <Link key={s} href={q({ side: side === s ? null : s, show: null })} title={SIDE_HINT[s]}
-              className={cn('sheen glow-ring rounded-lg border bg-card px-4 py-3.5 transition-shadow', side === s && 'border-primary/40')}>
+              className={cn('sheen glow-ring glass rounded-[22px] border px-4 py-3.5 transition-shadow', side === s && 'border-primary/40')}>
               <p className="flex items-center gap-1.5 text-[12.5px] text-muted-foreground"><span className={cn('size-2 rounded-full', SIDE_STYLE[s].dot)} />{SIDE_LABEL[s]}</p>
-              <p className="mt-1.5 text-[26px] font-normal tracking-[-0.03em] leading-none tabular">{n}</p>
+              <p className="mt-1.5 text-[32px] font-light tracking-[-0.04em] leading-none tabular">{n}</p>
               <p className="mt-1.5 text-[12px] text-muted-foreground">{open.length ? Math.round((n / open.length) * 100) : 0}% of open</p>
             </Link>
           );

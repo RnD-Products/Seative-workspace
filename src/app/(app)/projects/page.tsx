@@ -86,7 +86,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
             const late = left !== null && left < 0 && p.status !== 'completed';
             return (
               <li key={p.id}>
-                <Link href={`/projects/${p.id}`} className="lift sheen glow-ring group relative flex h-full flex-col overflow-hidden rounded-lg border bg-card p-4 hover:border-primary/40">
+                <Link href={`/projects/${p.id}`} className="lift sheen glow-ring group relative flex h-full flex-col overflow-hidden glass rounded-[22px] border p-4 hover:border-primary/40">
                                     <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2.5">
                       <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-md text-[12px] font-semibold text-white" style={{ background: color, boxShadow: `0 0 16px -2px ${color}` }}>{p.name.trim()[0]?.toUpperCase()}</span>

@@ -125,7 +125,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
                           <p className="truncate font-medium">{r.person.full_name}</p>
                           <p className="flex items-center gap-2 text-[12px] text-muted-foreground"><RoleBadge role={r.person.role} />{r.days} {r.days === 1 ? 'day' : 'days'} with time</p>
                         </div>
-                        <p className="text-right"><span className="block text-[22px] font-normal tracking-[-0.03em] leading-none tabular text-gradient">{fmtMinutes(r.minutes)}</span><span className="text-[11.5px] text-muted-foreground">this month</span></p>
+                        <p className="text-right"><span className="block text-[32px] font-light tracking-[-0.04em] leading-none tabular text-gradient">{fmtMinutes(r.minutes)}</span><span className="text-[11.5px] text-muted-foreground">this month</span></p>
                       </div>
                       {/* Share of the month, by project */}
                       <div className="flex h-2 overflow-hidden rounded-full bg-foreground/[0.06]" aria-hidden>
@@ -162,7 +162,7 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
   return (
     <Card className="glow-ring px-4 py-3.5 transition-shadow duration-300">
       <p className="text-[12.5px] text-muted-foreground">{label}</p>
-      <p className="mt-1.5 text-[24px] font-normal tracking-[-0.03em] leading-none tracking-[-0.03em] tabular text-gradient">{value}</p>
+      <p className="mt-1.5 text-[32px] font-light tracking-[-0.04em] leading-none tracking-[-0.03em] tabular text-gradient">{value}</p>
       {hint && <p className="mt-1.5 text-[12px] text-muted-foreground">{hint}</p>}
     </Card>
   );

@@ -5,7 +5,7 @@ import { NotificationsBell } from './notifications-bell';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { BarChart3, ChevronDown, Clock3, FolderKanban, Inbox, Keyboard, MessagesSquare, OctagonAlert, LayoutDashboard, ListChecks, LogOut, Menu, Plus, Search, Settings, Sparkles, Users, X } from 'lucide-react';
+import { BarChart3, ChevronDown, Clock3, FolderKanban, Inbox, MessagesSquare, OctagonAlert, LayoutDashboard, ListChecks, LogOut, Menu, Plus, Search, Settings, Sparkles, Users, X } from 'lucide-react';
 import { cn, APP_NAME } from '@/lib/utils';
 import { ROLE_LABEL } from '@/lib/domain';
 import type { Role, RunningTimer } from '@/lib/types';
@@ -58,51 +58,14 @@ export function AppShell({ user, orgName, projects, canCreate, timer, unread, in
 
   const [projectsOpen, setProjectsOpen] = useState(true);
 
-  // Icon rail (desktop): one icon per place, with a tooltip and a small count when something waits.
-  const rail = (
-    <div className="flex h-full w-[60px] flex-col items-center gap-1 border-r bg-shell py-3">
-      <Link href="/" className="mb-3 grid size-9 place-items-center rounded-[10px] bg-foreground text-[15px] font-bold text-background" title={orgName}>S</Link>
-      <nav aria-label="Main" className="flex flex-col items-center gap-1">
-        {nav.map(({ href, label, icon: Icon, badge, tone }) => (
-          <Link key={href} href={href} aria-current={isActive(href) ? 'page' : undefined} aria-label={label}
-            className={cn('group relative grid size-9 place-items-center rounded-[10px] text-ink-foreground transition-colors hover:bg-foreground/[0.07] hover:text-ink-strong', isActive(href) && 'bg-foreground/[0.1] text-ink-strong')}>
-            <Icon className="size-[18px]" aria-hidden />
-            {badge ? <span className={cn('absolute -right-1 -top-1 grid min-w-4 place-items-center rounded-full px-1 text-[10px] font-semibold leading-4 text-white ring-2 ring-shell', tone === 'red' ? 'bg-destructive' : tone === 'primary' ? 'bg-ai' : 'bg-deadline')}>{badge}</span> : null}
-            <span role="tooltip" className="pointer-events-none absolute left-full z-50 ml-2 whitespace-nowrap rounded-md border bg-card px-2 py-1 text-[12px] text-foreground opacity-0 shadow-lift transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">{label}</span>
-          </Link>
-        ))}
-        {user.role !== 'sales' && (
-          <Link href="/ask" aria-label="Ask about work" aria-current={pathname === '/ask' ? 'page' : undefined}
-            className={cn('group relative grid size-9 place-items-center rounded-[10px] text-ai hover:bg-foreground/[0.07]', pathname === '/ask' && 'bg-foreground/[0.1]')}>
-            <Sparkles className="size-[18px]" aria-hidden />
-            <span role="tooltip" className="pointer-events-none absolute left-full z-50 ml-2 whitespace-nowrap rounded-md border bg-card px-2 py-1 text-[12px] text-foreground opacity-0 shadow-lift transition-opacity group-hover:opacity-100">Ask about work</span>
-          </Link>
-        )}
-      </nav>
-      <div className="mt-auto flex flex-col items-center gap-1">
-        <NotificationsBell initialUnread={unread} />
-        <button onClick={() => setHelp(true)} className="grid size-9 place-items-center rounded-[10px] text-ink-foreground hover:bg-foreground/[0.07] hover:text-ink-strong" title="Keyboard shortcuts (?)">
-          <Keyboard className="size-[18px]" aria-hidden /><span className="sr-only">Keyboard shortcuts</span>
-        </button>
-        <ThemeToggle className="size-9 rounded-[10px]" />
-        <form action={signOut}>
-          <button type="submit" className="grid size-9 place-items-center rounded-[10px] text-ink-foreground hover:bg-foreground/[0.07] hover:text-ink-strong" title="Sign out">
-            <LogOut className="size-[18px]" aria-hidden /><span className="sr-only">Sign out</span>
-          </button>
-        </form>
-        <span className="mt-1" title={`${user.full_name} · ${ROLE_LABEL[user.role]}`}><Avatar person={user} size="md" /></span>
-      </div>
-    </div>
-  );
-
   // Second panel: search, the project list with open-task counts, and a create button.
   const panel = (mobile: boolean) => (
-    <div className="flex h-full flex-col gap-3 bg-shell px-3 pb-3 pt-4">
+    <div className={cn('flex h-full flex-col gap-3 px-3 pb-3 pt-4', mobile && 'bg-shell')}>
       <div className={cn('flex items-center justify-between px-1', mobile && 'pr-9')}>
         <p className="text-[17px] font-semibold tracking-[-0.01em] text-ink-strong">{user.role === 'sales' ? 'Deals' : 'Projects'}</p>
         <span className="truncate pl-2 text-[11.5px] text-ink-foreground">{orgName}</span>
       </div>
-      <button onClick={() => setPalette(true)} className="flex h-9 items-center gap-2 rounded-[10px] border bg-card px-2.5 text-[13px] text-ink-foreground hover:border-border-strong">
+      <button onClick={() => setPalette(true)} className="flex h-9 items-center gap-2 rounded-full border bg-foreground/[0.03] px-3 text-[13px] text-ink-foreground hover:border-border-strong lg:hidden">
         <Search className="size-4" aria-hidden /> <span className="flex-1 text-left">Search…</span>
         <kbd className="rounded-[5px] border bg-muted px-1.5 font-sans text-[10.5px] font-medium">{isMac ? '⌘' : 'Ctrl'} K</kbd>
       </button>
@@ -110,7 +73,7 @@ export function AppShell({ user, orgName, projects, canCreate, timer, unread, in
         <nav aria-label="Main" className="flex flex-col gap-px">
           {nav.map(({ href, label, icon: Icon, badge }) => (
             <Link key={href} href={href} aria-current={isActive(href) ? 'page' : undefined}
-              className={cn('flex h-9 items-center gap-2.5 rounded-[10px] px-2.5 text-[13px] text-ink-foreground hover:bg-foreground/[0.06] hover:text-ink-strong', isActive(href) && 'bg-foreground/[0.08] text-ink-strong')}>
+              className={cn('flex h-9 items-center gap-2.5 rounded-full px-3 text-[13px] text-ink-foreground hover:bg-foreground/[0.06] hover:text-ink-strong', isActive(href) && 'bg-foreground/[0.08] text-ink-strong')}>
               <Icon className="size-4" aria-hidden /> {label}
               {badge ? <span className="ml-auto rounded-full bg-foreground/10 px-1.5 text-[11px] font-semibold">{badge}</span> : null}
             </Link>
@@ -128,7 +91,7 @@ export function AppShell({ user, orgName, projects, canCreate, timer, unread, in
               return (
                 <li key={p.id}>
                   <Link href={`/projects/${p.id}`} aria-current={here ? 'page' : undefined}
-                    className={cn('flex h-8 items-center gap-2 rounded-[8px] px-2 text-[13px] text-ink-foreground transition-colors hover:bg-foreground/[0.06] hover:text-ink-strong', here && 'bg-foreground/[0.09] text-ink-strong')}>
+                    className={cn('flex h-9 items-center gap-2 rounded-full px-3 text-[13px] text-ink-foreground transition-colors hover:bg-foreground/[0.06] hover:text-ink-strong', here && 'bg-foreground/[0.09] text-ink-strong')}>
                     <span className="text-ink-foreground/60">#</span>
                     <span className="min-w-0 flex-1 truncate">{p.name}</span>
                     {p.open ? <span className="grid min-w-5 place-items-center rounded-full px-1 text-[10.5px] font-semibold leading-5 text-black" style={{ background: p.color }}>{p.open}</span> : null}
@@ -145,7 +108,7 @@ export function AppShell({ user, orgName, projects, canCreate, timer, unread, in
       </div>
       {timer && <RunningTimerPill timer={timer} />}
       {createHref && (
-        <Link href={createHref} className="flex h-9 items-center justify-center gap-2 rounded-[10px] border border-border-strong bg-card text-[13px] font-medium text-ink-strong hover:bg-muted">
+        <Link href={createHref} className="flex h-10 items-center justify-center gap-2 rounded-full bg-primary text-[13px] font-semibold text-primary-foreground hover:bg-primary-hover">
           <Plus className="size-4" aria-hidden /> {createLabel}
         </Link>
       )}
@@ -160,12 +123,47 @@ export function AppShell({ user, orgName, projects, canCreate, timer, unread, in
     </div>
   );
 
-  return (
-    <div className="min-h-dvh bg-shell lg:grid lg:h-dvh lg:grid-cols-[60px_236px_1fr] lg:overflow-hidden">
-      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-card focus:px-3 focus:py-2">Skip to content</a>
 
-      <aside className="hidden h-dvh lg:block">{rail}</aside>
-      <aside className="hidden h-dvh border-r lg:block" aria-label="Projects">{panel(false)}</aside>
+  // Floating top bar: brand, pill navigation, and tools on the right.
+  const topbar = (
+    <header className="glass sticky top-3 z-30 mx-3 mt-3 hidden h-14 shrink-0 items-center gap-3 rounded-full border px-2.5 lg:flex">
+      <Link href="/" className="flex items-center gap-2 pl-1 pr-2" title={orgName}>
+        <span aria-hidden className="grid size-9 place-items-center rounded-full bg-foreground text-[14px] font-bold text-background">S</span>
+        <span className="hidden whitespace-nowrap text-[14px] font-medium tracking-[-0.01em] text-ink-strong 2xl:inline">{APP_NAME}</span>
+      </Link>
+      <nav aria-label="Main" className="flex min-w-0 items-center gap-0.5 overflow-x-auto rounded-full border bg-foreground/[0.03] p-1 [scrollbar-width:none]">
+        {nav.map(({ href, label, badge, tone }) => (
+          <Link key={href} href={href} aria-current={isActive(href) ? 'page' : undefined}
+            className={cn('relative flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] text-ink-foreground transition-colors hover:text-ink-strong',
+              isActive(href) && 'bg-raised text-ink-strong shadow-[inset_0_1px_0_var(--edge),0_1px_2px_rgb(0_0_0/0.2)]')}>
+            {label}
+            {badge ? <span className={cn('grid min-w-[18px] place-items-center rounded-full px-1 text-[10.5px] font-semibold leading-[18px]', tone === 'red' ? 'bg-destructive-soft text-destructive' : tone === 'primary' ? 'bg-primary-soft text-ink-strong' : 'bg-deadline-soft text-deadline')}>{badge}</span> : null}
+          </Link>
+        ))}
+      </nav>
+      <div className="ml-auto flex items-center gap-1.5">
+        {timer && <RunningTimerPill timer={timer} compact />}
+        <button onClick={() => setPalette(true)} className="flex h-9 w-9 items-center justify-center gap-2 rounded-full border bg-foreground/[0.03] text-[13px] text-ink-foreground hover:border-border-strong 2xl:w-56 2xl:justify-start 2xl:px-3" aria-label="Search">
+          <Search className="size-4" aria-hidden /><span className="hidden flex-1 text-left 2xl:inline">Search</span>
+          <kbd className="hidden rounded-full bg-foreground/[0.06] px-2 font-sans text-[10.5px] 2xl:inline">{isMac ? '⌘' : 'Ctrl'} K</kbd>
+        </button>
+        {user.role !== 'sales' && (
+          <Link href="/ask" className="grid size-9 place-items-center rounded-full border bg-foreground/[0.03] text-ai hover:border-border-strong" title="Ask about work"><Sparkles className="size-4" aria-hidden /><span className="sr-only">Ask about work</span></Link>
+        )}
+        <span className="grid size-9 place-items-center rounded-full border bg-foreground/[0.03]"><NotificationsBell initialUnread={unread} /></span>
+        <span className="grid size-9 place-items-center rounded-full border bg-foreground/[0.03]"><ThemeToggle className="size-8 rounded-full" /></span>
+        <form action={signOut}>
+          <button type="submit" className="grid size-9 place-items-center rounded-full border bg-foreground/[0.03] text-ink-foreground hover:text-ink-strong" title="Sign out"><LogOut className="size-4" aria-hidden /><span className="sr-only">Sign out</span></button>
+        </form>
+        <button onClick={() => setHelp(true)} className="pl-0.5" title={`${user.full_name} · ${ROLE_LABEL[user.role]} — keyboard shortcuts`}><Avatar person={user} size="lg" /></button>
+      </div>
+    </header>
+  );
+
+  return (
+    <div className="ambient flex min-h-dvh flex-col lg:h-dvh lg:overflow-hidden">
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-card focus:px-3 focus:py-2">Skip to content</a>
+      {topbar}
 
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
@@ -177,8 +175,10 @@ export function AppShell({ user, orgName, projects, canCreate, timer, unread, in
         </div>
       )}
 
-      <div className="flex min-w-0 flex-col bg-background lg:overflow-y-auto" data-scroll-root>
-        <header className="sticky top-0 z-30 flex h-11 shrink-0 items-center gap-2 border-b bg-background/70 px-3 backdrop-blur-xl sm:px-5 lg:hidden">
+      <div className="flex min-h-0 flex-1 gap-3 lg:p-3">
+      <aside className="glass hidden w-[256px] shrink-0 overflow-hidden rounded-[24px] border lg:block" aria-label="Projects">{panel(false)}</aside>
+      <div className="flex min-w-0 flex-1 flex-col lg:overflow-y-auto lg:rounded-[24px]" data-scroll-root>
+        <header className="glass sticky top-2 z-30 mx-2 mt-2 flex h-12 shrink-0 items-center gap-2 rounded-full border px-2 sm:px-3 lg:hidden">
           <button onClick={() => setOpen(true)} className="grid size-8 place-items-center rounded-md hover:bg-muted" aria-label="Open menu" aria-expanded={open}>
             <Menu className="size-4" />
           </button>
@@ -192,9 +192,10 @@ export function AppShell({ user, orgName, projects, canCreate, timer, unread, in
             {createHref && <Button asChild size="icon" variant="ghost"><Link href={createHref} aria-label={createLabel}><Plus /></Link></Button>}
           </div>
         </header>
-        <main id="main" className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-7">
+        <main id="main" className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-5 lg:py-4">
           <div key={pathname} className="mx-auto max-w-[1180px] animate-page-in">{children}</div>
         </main>
+      </div>
       </div>
 
       <Toaster />

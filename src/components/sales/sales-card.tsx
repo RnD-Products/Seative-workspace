@@ -66,7 +66,7 @@ function Money({ label, value, strong, tone }: { label: string; value: string; s
   return (
     <div className="rounded-lg border p-3">
       <p className="text-[12px] text-muted-foreground">{label}</p>
-      <p className={`mt-1 tabular ${strong ? 'text-[22px] font-normal tracking-[-0.03em]' : 'text-[16px] font-medium'} ${tone ?? ''}`}>{value}</p>
+      <p className={`mt-1 tabular ${strong ? 'text-[32px] font-light tracking-[-0.04em]' : 'text-[16px] font-medium'} ${tone ?? ''}`}>{value}</p>
     </div>
   );
 }

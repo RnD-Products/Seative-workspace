@@ -4,93 +4,97 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Seative Workspace — "deck" (AturnDeck-inspired)
- * Soft charcoal greys instead of pure black, rounded panels, roomy cards,
- * a neutral (white) primary action and colour reserved for meaning:
- * priority chips, status, project badges. Blue marks live/AI states.
- *
- * Layers (dark):  shell #171717  ·  page #1b1b1b  ·  panel #212121  ·  card #262626  ·  hover #2e2e2e
+ * Seative Workspace — "glass" (modern control-room dashboards)
+ * Floating frosted panels over a softly lit backdrop, very round corners, pill controls,
+ * light-weight big numbers and ONE accent (lime) used sparingly for the main action and
+ * "live/today" states. Status colours stay muted and only carry meaning.
  */
 :root {
-  --shell: #f1f1f2;
-  --background: #f7f7f8;
-  --foreground: #18181a;
-  --card: #ffffff;
-  --raised: #f4f4f5;
-  --muted: #ececee;
-  --muted-foreground: #6b6b72;
-  --border: #e4e4e7;
-  --border-strong: #d4d4d8;
-  --input: #d9d9de;
-  --primary: #18181a;
-  --primary-hover: #2c2c30;
+  --shell: #e7eaea;
+  --background: #eef0f0;
+  --foreground: #141616;
+  --card: rgb(255 255 255 / 0.62);
+  --raised: rgb(255 255 255 / 0.82);
+  --muted: rgb(20 22 22 / 0.05);
+  --muted-foreground: #687070;
+  --border: rgb(20 22 22 / 0.08);
+  --border-strong: rgb(20 22 22 / 0.14);
+  --input: rgb(20 22 22 / 0.12);
+  --primary: #141616;
+  --primary-hover: #2a2d2d;
   --primary-foreground: #ffffff;
-  --primary-soft: #ececee;
-  --deadline: #b06d00;
-  --deadline-soft: #fdf1dc;
-  --destructive: #d43f3a;
-  --destructive-soft: #fdeceb;
-  --success: #198a4b;
-  --success-soft: #e3f5ea;
-  --warning: #b06d00;
-  --warning-soft: #fdf1dc;
-  --info: #2f73e0;
-  --info-soft: #e8f0fd;
-  --ai: #2f73e0;
-  --ai-soft: #e8f0fd;
-  --ink: #f1f1f2;
-  --ink-2: #e8e8ea;
-  --ink-foreground: #63636a;
-  --ink-strong: #18181a;
-  --ring: #3b82f6;
-  --shadow-lift: 0 0 0 1px rgb(0 0 0 / 0.05), 0 12px 32px -12px rgb(0 0 0 / 0.2);
-  --chart-grid: #e8e8ea;
-  --chart-axis: #7a7a82;
-  --glow-a: transparent;
-  --glow-b: transparent;
-  --edge: rgb(255 255 255 / 0.9);
+  --primary-soft: rgb(20 22 22 / 0.06);
+  --accent: #141616;
+  --accent-foreground: #ffffff;
+  --deadline: #a8730c;
+  --deadline-soft: rgb(240 177 63 / 0.16);
+  --destructive: #c8483d;
+  --destructive-soft: rgb(220 80 70 / 0.11);
+  --success: #2f8a55;
+  --success-soft: rgb(60 170 100 / 0.13);
+  --warning: #a8730c;
+  --warning-soft: rgb(240 177 63 / 0.16);
+  --info: #3f6fd8;
+  --info-soft: rgb(63 111 216 / 0.11);
+  --ai: #3f6fd8;
+  --ai-soft: rgb(63 111 216 / 0.11);
+  --ink: #e7eaea;
+  --ink-2: #dfe3e3;
+  --ink-foreground: #5f6767;
+  --ink-strong: #141616;
+  --ring: #3f6fd8;
+  --shadow-lift: 0 1px 0 rgb(255 255 255 / 0.8) inset, 0 20px 50px -24px rgb(30 40 40 / 0.35);
+  --chart-grid: rgb(20 22 22 / 0.07);
+  --chart-axis: #7b8383;
+  --glow-a: rgb(255 255 255 / 0.9);
+  --glow-b: rgb(200 215 210 / 0.7);
+  --edge: rgb(255 255 255 / 0.85);
   --card-sheen: none;
+  --glass-blur: 22px;
 }
 
 .dark {
-  --shell: #171717;
-  --background: #1b1b1b;
-  --foreground: #f2f2f2;
-  --card: #242424;
-  --raised: #2a2a2a;
-  --muted: #2e2e2e;
-  --muted-foreground: #9b9b9b;
-  --border: #2e2e2e;
-  --border-strong: #3a3a3a;
-  --input: #3a3a3a;
-  --primary: #f2f2f2;
-  --primary-hover: #ffffff;
-  --primary-foreground: #161616;
-  --primary-soft: rgb(255 255 255 / 0.08);
-  --deadline: #e9b949;
-  --deadline-soft: rgb(233 185 73 / 0.14);
-  --destructive: #f26d6d;
-  --destructive-soft: rgb(242 109 109 / 0.14);
-  --success: #6bd28f;
-  --success-soft: rgb(107 210 143 / 0.13);
-  --warning: #e9b949;
-  --warning-soft: rgb(233 185 73 / 0.14);
-  --info: #6aa8ff;
-  --info-soft: rgb(106 168 255 / 0.14);
-  --ai: #6aa8ff;
-  --ai-soft: rgb(106 168 255 / 0.14);
-  --ink: #171717;
-  --ink-2: #212121;
-  --ink-foreground: #9b9b9b;
-  --ink-strong: #f2f2f2;
-  --ring: #6aa8ff;
-  --shadow-lift: 0 0 0 1px #333, 0 18px 40px -14px rgb(0 0 0 / 0.75);
-  --chart-grid: #2e2e2e;
-  --chart-axis: #8a8a8a;
-  --glow-a: transparent;
-  --glow-b: transparent;
-  --edge: rgb(255 255 255 / 0.04);
+  --shell: #0b0c0c;
+  --background: #0e0f0f;
+  --foreground: #f1f2ef;
+  --card: rgb(32 34 34 / 0.55);
+  --raised: rgb(48 50 50 / 0.6);
+  --muted: rgb(255 255 255 / 0.06);
+  --muted-foreground: rgb(241 242 239 / 0.55);
+  --border: rgb(255 255 255 / 0.07);
+  --border-strong: rgb(255 255 255 / 0.13);
+  --input: rgb(255 255 255 / 0.1);
+  --primary: #e4f26b;
+  --primary-hover: #eef78f;
+  --primary-foreground: #121400;
+  --primary-soft: rgb(228 242 107 / 0.12);
+  --accent: #e4f26b;
+  --accent-foreground: #121400;
+  --deadline: #e6c25c;
+  --deadline-soft: rgb(230 194 92 / 0.12);
+  --destructive: #ef7d72;
+  --destructive-soft: rgb(239 125 114 / 0.12);
+  --success: #8fd19e;
+  --success-soft: rgb(143 209 158 / 0.11);
+  --warning: #e6c25c;
+  --warning-soft: rgb(230 194 92 / 0.12);
+  --info: #9cc0ff;
+  --info-soft: rgb(156 192 255 / 0.11);
+  --ai: #9cc0ff;
+  --ai-soft: rgb(156 192 255 / 0.11);
+  --ink: #0b0c0c;
+  --ink-2: #141515;
+  --ink-foreground: rgb(241 242 239 / 0.55);
+  --ink-strong: #f1f2ef;
+  --ring: #e4f26b;
+  --shadow-lift: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 24px 60px -24px rgb(0 0 0 / 0.85);
+  --chart-grid: rgb(255 255 255 / 0.06);
+  --chart-axis: rgb(241 242 239 / 0.42);
+  --glow-a: rgb(150 170 150 / 0.20);
+  --glow-b: rgb(90 110 120 / 0.28);
+  --edge: rgb(255 255 255 / 0.06);
   --card-sheen: none;
+  --glass-blur: 26px;
   color-scheme: dark;
 }
 
@@ -132,10 +136,10 @@
   --color-ink-strong: var(--ink-strong);
 
   --shadow-lift: var(--shadow-lift);
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 10px;
-  --radius-xl: 14px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
 
   /* Motion: short, eased out, never bouncy. Respects prefers-reduced-motion (bottom of file). */
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
@@ -179,35 +183,38 @@
 @layer utilities {
   .chat-frame { height: calc(100dvh - 6.75rem); grid-template-rows: minmax(0, 1fr); }
   @media (min-width: 1024px) { .chat-frame { height: calc(100dvh - 3.5rem); } }
-  /* Ambient light: cool blue from the left, warm rust from the right, over a faint ledger grid. */
+  /* Backdrop: soft light pools on a near-black (or pale stone) field, with a fine grain. */
   .ambient {
     background:
-      radial-gradient(900px 420px at 0% -12%, var(--glow-a), transparent 60%),
-      radial-gradient(900px 420px at 100% -12%, var(--glow-b), transparent 60%),
+      radial-gradient(1100px 600px at 12% -10%, var(--glow-a), transparent 60%),
+      radial-gradient(900px 700px at 100% 110%, var(--glow-b), transparent 60%),
       var(--background);
-    background-attachment: local;
-    position: relative;
+    background-attachment: fixed;
   }
-
   .grid-bg {
     background-image:
-      linear-gradient(to right, rgb(255 255 255 / 0.035) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(255 255 255 / 0.035) 1px, transparent 1px);
-    background-size: 48px 48px;
+      linear-gradient(to right, rgb(255 255 255 / 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.03) 1px, transparent 1px);
+    background-size: 56px 56px;
   }
   :root:not(.dark) .grid-bg {
     background-image:
-      linear-gradient(to right, rgb(0 0 0 / 0.04) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(0 0 0 / 0.04) 1px, transparent 1px);
+      linear-gradient(to right, rgb(0 0 0 / 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(0 0 0 / 0.035) 1px, transparent 1px);
+  }
+  /* Frosted panel */
+  .glass {
+    background-color: var(--card);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    box-shadow: inset 0 1px 0 var(--edge), 0 18px 50px -30px rgb(0 0 0 / 0.55);
   }
   .sheen { box-shadow: inset 0 1px 0 var(--edge); }
-  /* Primary action: flat rust with a thin top highlight (no gradients, no bloom). */
-  .glow-primary { background-color: var(--primary); box-shadow: none; }
+  .glow-primary { background-color: var(--primary); }
   .glow-primary:hover { background-color: var(--primary-hover); }
-  .glow-ring:hover { border-color: var(--border-strong); background-color: color-mix(in oklab, var(--card) 92%, white 8%); }
-  :root:not(.dark) .glow-ring:hover { background-color: var(--raised); }
+  .glow-ring:hover { border-color: var(--border-strong); background-color: var(--raised); }
   .text-gradient { color: var(--foreground); }
-  .bar-glow { background-color: var(--success); }
+  .bar-glow { background-color: var(--foreground); }
   .label-mono { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.02em; color: var(--muted-foreground); }
   /* Children rise in one after another on first paint. */
   .stagger > * { animation: var(--animate-rise-in); }

@@ -153,8 +153,8 @@ export function TimeTracker({ projectId, tasks, people, entries, totals, timer, 
 
         <div className="grid gap-4 md:grid-cols-[minmax(0,240px)_1fr]">
           <dl className="grid grid-cols-2 gap-3 md:grid-cols-1">
-            <div className="rounded-lg border p-3"><dt className="text-[12px] text-muted-foreground">This week</dt><dd className="mt-1 text-[22px] font-normal tracking-[-0.03em] tabular text-gradient">{fmtMinutes(totals.week)}</dd></div>
-            <div className="rounded-lg border p-3"><dt className="text-[12px] text-muted-foreground">Total on project</dt><dd className="mt-1 text-[22px] font-normal tracking-[-0.03em] tabular text-gradient">{fmtMinutes(totals.total)}</dd></div>
+            <div className="rounded-lg border p-3"><dt className="text-[12px] text-muted-foreground">This week</dt><dd className="mt-1 text-[32px] font-light tracking-[-0.04em] tabular text-gradient">{fmtMinutes(totals.week)}</dd></div>
+            <div className="rounded-lg border p-3"><dt className="text-[12px] text-muted-foreground">Total on project</dt><dd className="mt-1 text-[32px] font-light tracking-[-0.04em] tabular text-gradient">{fmtMinutes(totals.total)}</dd></div>
           </dl>
           <div>
             <h3 className="mb-2 text-[12px] font-medium text-muted-foreground">By person</h3>
